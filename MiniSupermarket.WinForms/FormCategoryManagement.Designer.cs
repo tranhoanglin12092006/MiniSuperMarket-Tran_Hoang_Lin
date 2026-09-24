@@ -96,13 +96,13 @@
                 System.Windows.Forms.AutoScaleMode.Font;
 
             this.ClientSize =
-                new System.Drawing.Size(560, 360);
+                new System.Drawing.Size(700, 360);
 
             this.MinimumSize =
-                new System.Drawing.Size(560, 360);
+                new System.Drawing.Size(700, 360);
 
             this.MaximumSize =
-                new System.Drawing.Size(560, 360);
+                new System.Drawing.Size(700, 360);
 
             this.FormBorderStyle =
                 System.Windows.Forms.FormBorderStyle.FixedSingle;
@@ -129,7 +129,7 @@
                 "txtKeyword";
 
             this.txtKeyword.Size =
-                new System.Drawing.Size(280, 23);
+                new System.Drawing.Size(400, 23);
 
             this.txtKeyword.TabIndex = 0;
 
@@ -138,7 +138,7 @@
             // =====================================================
 
             this.btnSearch.Location =
-                new System.Drawing.Point(310, 17);
+                new System.Drawing.Point(430, 17);
 
             this.btnSearch.Name =
                 "btnSearch";
@@ -163,7 +163,7 @@
             // =====================================================
 
             this.btnLoad.Location =
-                new System.Drawing.Point(405, 17);
+                new System.Drawing.Point(525, 17);
 
             this.btnLoad.Name =
                 "btnLoad";
@@ -194,7 +194,7 @@
                 "grpCategoryList";
 
             this.grpCategoryList.Size =
-                new System.Drawing.Size(330, 265);
+                new System.Drawing.Size(430, 265);
 
             this.grpCategoryList.TabIndex = 3;
 
@@ -214,7 +214,7 @@
                 "dgvCategories";
 
             this.dgvCategories.Size =
-                new System.Drawing.Size(318, 238);
+                new System.Drawing.Size(418, 238);
 
             this.dgvCategories.TabIndex = 0;
 
@@ -320,7 +320,10 @@
             colDescription.FillWeight =
                 40;
 
-            // Add columns
+            // =====================================================
+            // ADD COLUMNS
+            // =====================================================
+
             this.dgvCategories.Columns.AddRange(
                 new System.Windows.Forms.DataGridViewColumn[]
                 {
@@ -329,12 +332,16 @@
                     colDescription
                 });
 
-            // Cell Click
+            // =====================================================
+            // CELL CLICK
+            // =====================================================
+
             this.dgvCategories.CellClick +=
                 new System.Windows.Forms.DataGridViewCellEventHandler(
                     this.dgvCategories_CellClick);
 
             // Add DataGridView vào GroupBox
+
             this.grpCategoryList.Controls.Add(
                 this.dgvCategories);
 
@@ -343,13 +350,13 @@
             // =====================================================
 
             this.grpCategoryInfo.Location =
-                new System.Drawing.Point(360, 55);
+                new System.Drawing.Point(465, 55);
 
             this.grpCategoryInfo.Name =
                 "grpCategoryInfo";
 
             this.grpCategoryInfo.Size =
-                new System.Drawing.Size(180, 265);
+                new System.Drawing.Size(210, 265);
 
             this.grpCategoryInfo.TabIndex = 4;
 
@@ -388,7 +395,7 @@
                 "txtId";
 
             this.txtId.Size =
-                new System.Drawing.Size(160, 23);
+                new System.Drawing.Size(190, 23);
 
             this.txtId.ReadOnly =
                 true;
@@ -428,7 +435,7 @@
                 "txtCategoryName";
 
             this.txtCategoryName.Size =
-                new System.Drawing.Size(160, 23);
+                new System.Drawing.Size(190, 23);
 
             this.txtCategoryName.TabIndex = 2;
 
@@ -462,7 +469,7 @@
                 "txtDescription";
 
             this.txtDescription.Size =
-                new System.Drawing.Size(160, 55);
+                new System.Drawing.Size(190, 55);
 
             this.txtDescription.Multiline =
                 true;
@@ -483,7 +490,7 @@
                 "btnAdd";
 
             this.btnAdd.Size =
-                new System.Drawing.Size(50, 27);
+                new System.Drawing.Size(55, 27);
 
             this.btnAdd.Text =
                 "Thêm";
@@ -502,13 +509,13 @@
             // =====================================================
 
             this.btnUpdate.Location =
-                new System.Drawing.Point(65, 225);
+                new System.Drawing.Point(70, 225);
 
             this.btnUpdate.Name =
                 "btnUpdate";
 
             this.btnUpdate.Size =
-                new System.Drawing.Size(60, 27);
+                new System.Drawing.Size(70, 27);
 
             this.btnUpdate.Text =
                 "Cập nhật";
@@ -527,13 +534,13 @@
             // =====================================================
 
             this.btnDelete.Location =
-                new System.Drawing.Point(130, 225);
+                new System.Drawing.Point(145, 225);
 
             this.btnDelete.Name =
                 "btnDelete";
 
             this.btnDelete.Size =
-                new System.Drawing.Size(40, 27);
+                new System.Drawing.Size(50, 27);
 
             this.btnDelete.Text =
                 "Xóa";
@@ -547,7 +554,10 @@
                 new System.EventHandler(
                     this.btnDelete_Click);
 
-            // Add controls vào GroupBox
+            // =====================================================
+            // ADD CONTROLS VÀO GROUPBOX THÔNG TIN
+            // =====================================================
+
             this.grpCategoryInfo.Controls.Add(
                 this.lblId);
 
@@ -592,7 +602,7 @@
                 "statusStrip";
 
             this.statusStrip.Size =
-                new System.Drawing.Size(560, 22);
+                new System.Drawing.Size(700, 22);
 
             this.statusStrip.TabIndex = 5;
 
