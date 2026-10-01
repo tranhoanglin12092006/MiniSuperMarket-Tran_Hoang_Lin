@@ -307,7 +307,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Nguyễn Văn An",
                     PhoneNumber = "0901234567",
                     MembershipRank = "Vàng",
-                    RewardPoints = 150
+                    RewardPoints = 150,
+                    Address = "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -316,7 +317,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Trần Thị Bình",
                     PhoneNumber = "0912345678",
                     MembershipRank = "Bạc",
-                    RewardPoints = 80
+                    RewardPoints = 80,
+                    Address = "45 Lê Văn Việt, Phường Hiệp Phú, Thành phố Thủ Đức, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -325,7 +327,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Lê Văn Cường",
                     PhoneNumber = "0983456789",
                     MembershipRank = "Chuẩn",
-                    RewardPoints = 20
+                    RewardPoints = 20,
+                    Address = "78 Cách Mạng Tháng 8, Phường 6, Quận 3, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -334,7 +337,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Phạm Thị Dung",
                     PhoneNumber = "0904567891",
                     MembershipRank = "Vàng",
-                    RewardPoints = 200
+                    RewardPoints = 200,
+                    Address = "12 Phan Xích Long, Phường 2, Quận Phú Nhuận, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -343,7 +347,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Hoàng Văn Đức",
                     PhoneNumber = "0915678902",
                     MembershipRank = "Bạc",
-                    RewardPoints = 65
+                    RewardPoints = 65,
+                    Address = "56 Đinh Tiên Hoàng, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -352,7 +357,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Võ Thị Hà",
                     PhoneNumber = "0986789013",
                     MembershipRank = "Chuẩn",
-                    RewardPoints = 15
+                    RewardPoints = 15,
+                    Address = "89 Nguyễn Văn Trỗi, Phường 8, Quận Phú Nhuận, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -361,7 +367,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Đặng Minh Hoàng",
                     PhoneNumber = "0907890124",
                     MembershipRank = "Vàng",
-                    RewardPoints = 180
+                    RewardPoints = 180,
+                    Address = "234 Võ Văn Tần, Phường 5, Quận 3, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -370,7 +377,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Bùi Thị Lan",
                     PhoneNumber = "0918901235",
                     MembershipRank = "Bạc",
-                    RewardPoints = 95
+                    RewardPoints = 95,
+                    Address = "345 Hai Bà Trưng, Phường 8, Quận 3, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -379,7 +387,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Đỗ Văn Nam",
                     PhoneNumber = "0989012346",
                     MembershipRank = "Chuẩn",
-                    RewardPoints = 30
+                    RewardPoints = 30,
+                    Address = "67 Lý Tự Trọng, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -388,7 +397,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Nguyễn Thị Mai",
                     PhoneNumber = "0901123456",
                     MembershipRank = "Vàng",
-                    RewardPoints = 250
+                    RewardPoints = 250,
+                    Address = "90 Pasteur, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -397,7 +407,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Trần Văn Phúc",
                     PhoneNumber = "0912234567",
                     MembershipRank = "Bạc",
-                    RewardPoints = 70
+                    RewardPoints = 70,
+                    Address = "15 Hoàng Văn Thụ, Phường 15, Quận Phú Nhuận, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -406,7 +417,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Lý Thị Quỳnh",
                     PhoneNumber = "0983345678",
                     MembershipRank = "Chuẩn",
-                    RewardPoints = 25
+                    RewardPoints = 25,
+                    Address = "228 Cộng Hòa, Phường 12, Quận Tân Bình, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -415,7 +427,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Phan Minh Tâm",
                     PhoneNumber = "0904456789",
                     MembershipRank = "Vàng",
-                    RewardPoints = 320
+                    RewardPoints = 320,
+                    Address = "510 Trường Chinh, Phường 13, Quận Tân Bình, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -424,7 +437,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Huỳnh Thị Thảo",
                     PhoneNumber = "0915567890",
                     MembershipRank = "Bạc",
-                    RewardPoints = 110
+                    RewardPoints = 110,
+                    Address = "75 Quang Trung, Phường 10, Quận Gò Vấp, TP. Hồ Chí Minh"
                 },
 
                 new Customer
@@ -433,7 +447,8 @@ namespace MiniSupermarket.API.Data
                     CustomerName = "Đinh Văn Tuấn",
                     PhoneNumber = "0986678901",
                     MembershipRank = "Chuẩn",
-                    RewardPoints = 40
+                    RewardPoints = 40,
+                    Address = "302 Nguyễn Oanh, Phường 17, Quận Gò Vấp, TP. Hồ Chí Minh"
                 }
 
             );
