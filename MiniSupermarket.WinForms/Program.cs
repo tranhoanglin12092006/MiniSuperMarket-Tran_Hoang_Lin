@@ -1,3 +1,5 @@
+
+
 namespace MiniSupermarket.WinForms
 {
     internal static class Program

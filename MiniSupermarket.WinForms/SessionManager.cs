@@ -14,42 +14,90 @@ namespace MiniSupermarket.WinForms
     {
         private static readonly HttpClient _client = new HttpClient
         {
-            BaseAddress = new Uri("https://localhost:7167/api/")  // nhớ chỉnh port phù hợp
+            BaseAddress = new Uri("https://localhost:7167/api/")
         };
 
-        // Hàm gọi API đăng nhập lấy Token
-        public static async Task<bool> LoginAsync(string username, string password)
+        // LOGIN
+        public static async Task<bool> LoginAsync(
+            string username,
+            string password)
         {
-            var loginObj = new { Username = username, Password = password };
-            var response = await _client.PostAsJsonAsync("auth/login", loginObj);
-
-            if (response.IsSuccessStatusCode)
+            var loginObj = new
             {
-                var jsonString = await response.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(jsonString);
-                SessionManager.JwtToken = doc.RootElement.GetProperty("token").GetString() ?? string.Empty;
-                SessionManager.CurrentRole = doc.RootElement.GetProperty("role").GetString() ?? string.Empty;
-                return true;
-            }
-            return false;
+                Username = username,
+                Password = password
+            };
+
+            var response = await _client.PostAsJsonAsync(
+                "auth/login",
+                loginObj);
+
+            if (!response.IsSuccessStatusCode)
+                return false;
+
+            var jsonString =
+                await response.Content.ReadAsStringAsync();
+
+            using var doc =
+                JsonDocument.Parse(jsonString);
+
+            SessionManager.JwtToken =
+                doc.RootElement
+                    .GetProperty("token")
+                    .GetString() ?? "";
+
+            SessionManager.CurrentRole =
+                doc.RootElement
+                    .GetProperty("role")
+                    .GetString() ?? "";
+
+            return !string.IsNullOrEmpty(
+                SessionManager.JwtToken);
         }
 
-        // Hàm gọi API lấy dữ liệu có gắn kèm Bearer Token bảo mật
-        public static async Task<string> GetDataWithTokenAsync(string endpoint)
+        // GET CÓ JWT
+        public static async Task<string> GetDataWithTokenAsync(
+            string endpoint)
         {
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", SessionManager.JwtToken);
-            var response = await _client.GetAsync(endpoint);
+            if (string.IsNullOrWhiteSpace(
+                SessionManager.JwtToken))
+            {
+                throw new Exception(
+                    "Chưa đăng nhập hoặc chưa có Token!");
+            }
+
+            using var request = new HttpRequestMessage(
+                HttpMethod.Get,
+                endpoint);
+
+            // QUAN TRỌNG: gửi JWT
+            request.Headers.Authorization =
+                new AuthenticationHeaderValue(
+                    "Bearer",
+                    SessionManager.JwtToken);
+
+            var response =
+                await _client.SendAsync(request);
 
             if (response.IsSuccessStatusCode)
             {
-                return await response.Content.ReadAsStringAsync();
+                return await response.Content
+                    .ReadAsStringAsync();
             }
-            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+
+            var error =
+                await response.Content
+                    .ReadAsStringAsync();
+
+            if (response.StatusCode ==
+                System.Net.HttpStatusCode.Unauthorized)
             {
-                throw new Exception("Phiên làm việc hết hạn hoặc chưa đăng nhập!");
+                throw new Exception(
+                    "401 Unauthorized - Token không hợp lệ!");
             }
-            throw new Exception("Lỗi khi gọi dữ liệu từ Server.");
+
+            throw new Exception(
+                $"API lỗi {(int)response.StatusCode}: {error}");
         }
     }
-
 }

@@ -51,8 +51,14 @@ namespace MiniSupermarket.WinForms
                     // Mở Form quản lý chính (FormCategoryManagement) và ẩn Form đăng nhập đi
                     FormCategoryManagement mainForm = new FormCategoryManagement();
                     this.Hide();
-                    mainForm.ShowDialog();
-                    this.Close(); // Đóng hẳn ứng dụng khi form chính tắt
+                    mainForm.Show();
+                    //this.Close(); // Đóng hẳn ứng dụng khi form chính tắt
+
+                    // Mở Form quản lý chính (FormCategoryManagement) và ẩn Form đăng nhập đi
+                    FormCustomerManagement mainForm1 = new FormCustomerManagement();
+                    //this.Hide();
+                    mainForm1.Show();
+                    //this.Close(); // Đóng hẳn ứng dụng khi form chính tắt
                 }
                 else
                 {
