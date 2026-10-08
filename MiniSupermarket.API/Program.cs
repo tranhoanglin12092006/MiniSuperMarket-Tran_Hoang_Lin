@@ -5,18 +5,27 @@ using Microsoft.OpenApi.Models;
 using MiniSupermarket.API.Data;
 using System.Text;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // =========================================================
 // 1. DATABASE - SQL SERVER + ENTITY FRAMEWORK CORE
 // =========================================================
 
+//var connectionString =
+//    builder.Configuration.GetConnectionString("DefaultConnection");
+
+//builder.Services.AddDbContext<SupermarketDbContext>(options =>
+//    options.UseSqlServer(connectionString));
+
 var connectionString =
     builder.Configuration.GetConnectionString("DefaultConnection");
 
 builder.Services.AddDbContext<SupermarketDbContext>(options =>
-    options.UseSqlServer(connectionString));
-
+    options.UseMySql(
+        connectionString,
+        ServerVersion.AutoDetect(connectionString)
+    ));
 
 // =========================================================
 // 2. JWT AUTHENTICATION
@@ -151,6 +160,24 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+
+// =========================================================
+// 10.5. TỰ ĐỘNG KHỞI TẠO VÀ CẬP NHẬT DATABASE (EF CORE MIGRATE)
+// =========================================================
+
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<SupermarketDbContext>();
+    try
+    {
+        dbContext.Database.Migrate();
+    }
+    catch (Exception ex)
+    {
+        var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "Đã xảy ra lỗi khi tự động cập nhật cơ sở dữ liệu (Database Migration).");
+    }
+}
 
 // =========================================================
 // 11. RUN

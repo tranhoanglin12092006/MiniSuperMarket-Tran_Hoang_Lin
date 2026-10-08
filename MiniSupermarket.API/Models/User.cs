@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MiniSupermarket.API.Models
@@ -28,6 +28,10 @@ namespace MiniSupermarket.API.Models
 
         [StringLength(255, ErrorMessage = "Phạm vi chức năng không vượt quá 255 ký tự")]
         public string FunctionScope { get; set; } = string.Empty; // Phạm vi chức năng cho phép
-        public bool IsActive { get; internal set; }
+
+        [StringLength(150, ErrorMessage = "Email không vượt quá 150 ký tự")]
+        public string Email { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
     }
 }

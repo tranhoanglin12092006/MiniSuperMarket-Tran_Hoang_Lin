@@ -1,80 +1,75 @@
-﻿using System.Net.Http.Json;
-using System.Text.Json;
+using System;
+using System.Drawing;
+using System.Windows.Forms;
 
 namespace MiniSupermarket.WinForms
 {
     public partial class FormLogin : Form
     {
-
-        // Khởi tạo HttpClient trỏ đến địa chỉ của Web API Backend
-        private static readonly HttpClient _client = new HttpClient
-        {
-            BaseAddress = new Uri("https://localhost:7167/api/")
-        };
-
         public FormLogin()
         {
             InitializeComponent();
         }
 
-        // Sự kiện khi người dùng bấm nút Đăng nhập
         private async void btnLogin_Click(object sender, EventArgs e)
         {
             string username = txtUser.Text.Trim();
-            string password = txtPass.Text.Trim();
+            string password = txtPass.Text;
 
             // Kiểm tra ràng buộc cơ bản phía Client
             if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
             {
-                MessageBox.Show("Vui lòng nhập đầy đủ tài khoản và mật khẩu!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                lblStatus.Text = "⚠️ Vui lòng nhập đầy đủ tài khoản và mật khẩu!";
+                lblStatus.ForeColor = Color.Crimson;
+                txtUser.Focus();
                 return;
             }
 
             try
             {
-                // Đóng gói dữ liệu gửi lên endpoint POST /api/auth/login
-                var loginData = new { Username = username, Password = password };
-                var response = await _client.PostAsJsonAsync("auth/login", loginData);
+                lblStatus.Text = "⏳ Đang kết nối máy chủ xác thực...";
+                lblStatus.ForeColor = Color.FromArgb(37, 99, 235);
+                btnLogin.Enabled = false;
+                btnLogin.Text = "Đang kiểm tra...";
 
-                if (response.IsSuccessStatusCode)
+                // Gọi hàm login tập trung qua ApiClientService
+                var (success, message) = await ApiClientService.LoginAsync(username, password);
+
+                if (success)
                 {
-                    // Đọc chuỗi JSON trả về từ Server khi đăng nhập thành công
-                    var jsonString = await response.Content.ReadAsStringAsync();
-                    using var doc = JsonDocument.Parse(jsonString);
+                    lblStatus.Text = "✅ Đăng nhập thành công! Đang tải hệ thống...";
+                    lblStatus.ForeColor = Color.FromArgb(22, 163, 74);
 
-                    // Trích xuất Token và Role lưu vào lớp tĩnh SessionManager dùng chung toàn ứng dụng
-                    SessionManager.JwtToken = doc.RootElement.GetProperty("token").GetString() ?? string.Empty;
-                    SessionManager.CurrentRole = doc.RootElement.GetProperty("role").GetString() ?? string.Empty;
-
-                    MessageBox.Show($"Đăng nhập thành công với quyền: {SessionManager.CurrentRole}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    //// Mở Form quản lý chính (FormCategoryManagement) và ẩn Form đăng nhập đi
-                    //FormCategoryManagement mainForm = new FormCategoryManagement();
-                    //this.Hide();
-                    //mainForm.Show();
-                    ////this.Close(); // Đóng hẳn ứng dụng khi form chính tắt
-
-                    //// Mở Form quản lý chính (FormCategoryManagement) và ẩn Form đăng nhập đi
-                    //FormCustomerManagement mainForm1 = new FormCustomerManagement();
-                    ////this.Hide();
-                    //mainForm1.Show();
-                    //this.Close(); // Đóng hẳn ứng dụng khi form chính tắt
-
-                    // Mở Form quản lý chính (FormCategoryManagement) và ẩn Form đăng nhập đi
-                    FormMainShell mainForm2 = new FormMainShell();
+                    // Mở Form giao diện chính Shell
+                    FormMainShell shell = new FormMainShell();
                     this.Hide();
-                    mainForm2.Show();
-                    //this.Close(); // Đóng hẳn ứng dụng khi form chính tắt
+                    shell.Show();
                 }
                 else
                 {
-                    MessageBox.Show("Sai tài khoản hoặc mật khẩu!", "Đăng nhập thất bại", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    lblStatus.Text = $"❌ {message}";
+                    lblStatus.ForeColor = Color.Crimson;
+                    MessageBox.Show(message, "Đăng nhập thất bại", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    txtPass.SelectAll();
+                    txtPass.Focus();
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi kết nối đến Server: " + ex.Message, "Lỗi hệ thống", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lblStatus.Text = "❌ Không thể kết nối tới Server!";
+                lblStatus.ForeColor = Color.Crimson;
+                MessageBox.Show($"Lỗi kết nối máy chủ: {ex.Message}", "Lỗi kết nối", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            finally
+            {
+                btnLogin.Enabled = true;
+                btnLogin.Text = "ĐĂNG NHẬP VÀO HỆ THỐNG";
+            }
+        }
+
+        private void chkShowPass_CheckedChanged(object sender, EventArgs e)
+        {
+            txtPass.UseSystemPasswordChar = !chkShowPass.Checked;
         }
     }
 }

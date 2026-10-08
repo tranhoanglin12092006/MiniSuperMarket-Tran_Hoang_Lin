@@ -1,28 +1,19 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
+using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
 
 namespace MiniSupermarket.WinForms
 {
     public partial class FormCustomerManagement : Form
     {
-        // Khởi tạo HttpClient trỏ đến Base Address của Web API
-        private static readonly HttpClient client = new HttpClient
-        {
-            BaseAddress = new Uri("https://localhost:7167/api/")
-        };
-
         private const string endpoint = "customers";
 
         public FormCustomerManagement()
         {
             InitializeComponent();
-            SetupHeaderToken();
+            if (cboMembershipRank.Items.Count > 0) cboMembershipRank.SelectedIndex = 0;
         }
 
         private async void FormCustomerManagement_Load(object sender, EventArgs e)
@@ -30,65 +21,137 @@ namespace MiniSupermarket.WinForms
             await LoadDataAsync();
         }
 
-        private void SetupHeaderToken()
-        {
-            if (!string.IsNullOrEmpty(SessionManager.JwtToken))
-            {
-                client.DefaultRequestHeaders.Authorization =
-                    new AuthenticationHeaderValue("Bearer", SessionManager.JwtToken);
-            }
-        }
-
         private async Task LoadDataAsync()
         {
             try
             {
-                SetupHeaderToken();
-                var customers = await client.GetFromJsonAsync<List<CustomerDto>>(endpoint);
-                dgvCustomers.DataSource = customers;
-                ClearInputs();
+                lblNotification.Text = "⏳ Đang tải danh sách khách hàng...";
+                lblNotification.ForeColor = Color.SteelBlue;
+
+                var customers = await ApiClientService.GetFromJsonWithAuthAsync<List<CustomerDto>>(endpoint);
+                if (customers != null)
+                {
+                    dgvCustomers.DataSource = null;
+                    dgvCustomers.DataSource = customers;
+                    ConfigureGridColumns();
+                    lblNotification.Text = $"✅ Đã tải thành công {customers.Count} khách hàng.";
+                    lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Lỗi tải dữ liệu: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lblNotification.Text = "❌ Lỗi: " + ex.Message;
+                lblNotification.ForeColor = Color.Crimson;
+                MessageBox.Show($"Lỗi tải dữ liệu khách hàng: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void ConfigureGridColumns()
+        {
+            if (dgvCustomers.Columns.Count == 0) return;
+
+            if (dgvCustomers.Columns["CustomerId"] != null)
+            {
+                dgvCustomers.Columns["CustomerId"].HeaderText = "Mã KH";
+                dgvCustomers.Columns["CustomerId"].Width = 70;
+            }
+            if (dgvCustomers.Columns["CustomerName"] != null)
+            {
+                dgvCustomers.Columns["CustomerName"].HeaderText = "Họ và tên";
+                dgvCustomers.Columns["CustomerName"].Width = 160;
+            }
+            if (dgvCustomers.Columns["PhoneNumber"] != null)
+            {
+                dgvCustomers.Columns["PhoneNumber"].HeaderText = "Số điện thoại";
+                dgvCustomers.Columns["PhoneNumber"].Width = 120;
+            }
+            if (dgvCustomers.Columns["MembershipRank"] != null)
+            {
+                dgvCustomers.Columns["MembershipRank"].HeaderText = "Hạng thẻ";
+                dgvCustomers.Columns["MembershipRank"].Width = 100;
+            }
+            if (dgvCustomers.Columns["RewardPoints"] != null)
+            {
+                dgvCustomers.Columns["RewardPoints"].HeaderText = "Điểm tích lũy";
+                dgvCustomers.Columns["RewardPoints"].Width = 110;
+            }
+            if (dgvCustomers.Columns["Address"] != null)
+            {
+                dgvCustomers.Columns["Address"].HeaderText = "Địa chỉ liên hệ";
             }
         }
 
         private async void btnLoad_Click(object sender, EventArgs e)
         {
+            ClearInputs();
             await LoadDataAsync();
+        }
+
+        private void dgvCustomers_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex >= 0 && e.RowIndex < dgvCustomers.Rows.Count)
+            {
+                DataGridViewRow row = dgvCustomers.Rows[e.RowIndex];
+                txtCustomerId.Text = row.Cells["CustomerId"]?.Value?.ToString() ?? string.Empty;
+                txtCustomerName.Text = row.Cells["CustomerName"]?.Value?.ToString() ?? string.Empty;
+                txtPhoneNumber.Text = row.Cells["PhoneNumber"]?.Value?.ToString() ?? string.Empty;
+                txtAddress.Text = row.Cells["Address"]?.Value?.ToString() ?? string.Empty;
+
+                string rank = row.Cells["MembershipRank"]?.Value?.ToString() ?? "Chuẩn";
+                cboMembershipRank.SelectedItem = rank;
+
+                if (decimal.TryParse(row.Cells["RewardPoints"]?.Value?.ToString(), out decimal pts))
+                {
+                    nudRewardPoints.Value = Math.Max(0, pts);
+                }
+                else
+                {
+                    nudRewardPoints.Value = 0;
+                }
+
+                lblNotification.Text = $"Đang chọn: [{txtCustomerName.Text}] - ĐT: [{txtPhoneNumber.Text}]";
+                lblNotification.ForeColor = Color.FromArgb(30, 41, 59);
+            }
         }
 
         private async void btnAdd_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(txtCustomerName.Text) || string.IsNullOrWhiteSpace(txtPhoneNumber.Text))
+            string name = txtCustomerName.Text.Trim();
+            string phone = txtPhoneNumber.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(phone))
             {
-                MessageBox.Show("Vui lòng nhập Tên khách hàng và Số điện thoại!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng nhập đầy đủ Tên khách hàng và Số điện thoại!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtCustomerName.Focus();
                 return;
             }
 
+            var newCustomer = new CustomerDto
+            {
+                CustomerName = name,
+                PhoneNumber = phone,
+                Address = txtAddress.Text.Trim(),
+                RewardPoints = (int)nudRewardPoints.Value,
+                MembershipRank = cboMembershipRank.SelectedItem?.ToString() ?? "Chuẩn"
+            };
+
             try
             {
-                var newCustomer = new CustomerDto
-                {
-                    CustomerName = txtCustomerName.Text.Trim(),
-                    PhoneNumber = txtPhoneNumber.Text.Trim(),
-                    Address = txtAddress.Text.Trim(),
-                    RewardPoints = int.TryParse(txtRewardPoints.Text, out var pts) ? pts : 0,
-                    MembershipRank = string.IsNullOrWhiteSpace(txtMembershipRank.Text) ? "Chuẩn" : txtMembershipRank.Text.Trim()
-                };
-
-                SetupHeaderToken();
-                HttpResponseMessage response = await client.PostAsJsonAsync(endpoint, newCustomer);
-
+                lblNotification.Text = "⏳ Đang thêm khách hàng...";
+                var response = await ApiClientService.PostAsJsonWithAuthAsync(endpoint, newCustomer);
                 if (response.IsSuccessStatusCode)
                 {
+                    lblNotification.Text = $"✅ Thêm khách hàng [{name}] thành công!";
+                    lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
                     MessageBox.Show("Thêm khách hàng thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await LoadDataAsync();
+                    ClearInputs();
                 }
                 else
                 {
                     string errorMsg = await response.Content.ReadAsStringAsync();
+                    lblNotification.Text = "❌ Thêm khách hàng thất bại!";
+                    lblNotification.ForeColor = Color.Crimson;
                     MessageBox.Show($"Thêm thất bại: {errorMsg}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -100,30 +163,40 @@ namespace MiniSupermarket.WinForms
 
         private async void btnUpdate_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(txtCustomerId.Text) || !int.TryParse(txtCustomerId.Text, out int id))
+            if (!int.TryParse(txtCustomerId.Text, out int id) || id <= 0)
             {
-                MessageBox.Show("Vui lòng chọn khách hàng cần cập nhật từ bảng!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng chọn khách hàng cần sửa từ danh sách!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
+            string name = txtCustomerName.Text.Trim();
+            string phone = txtPhoneNumber.Text.Trim();
+
+            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(phone))
+            {
+                MessageBox.Show("Vui lòng nhập Tên khách hàng và Số điện thoại!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var updateCustomer = new CustomerDto
+            {
+                CustomerId = id,
+                CustomerName = name,
+                PhoneNumber = phone,
+                Address = txtAddress.Text.Trim(),
+                RewardPoints = (int)nudRewardPoints.Value,
+                MembershipRank = cboMembershipRank.SelectedItem?.ToString() ?? "Chuẩn"
+            };
+
             try
             {
-                var updatedCustomer = new CustomerDto
-                {
-                    CustomerId = id,
-                    CustomerName = txtCustomerName.Text.Trim(),
-                    PhoneNumber = txtPhoneNumber.Text.Trim(),
-                    Address = txtAddress.Text.Trim(),
-                    RewardPoints = int.TryParse(txtRewardPoints.Text, out var pts) ? pts : 0,
-                    MembershipRank = txtMembershipRank.Text.Trim()
-                };
-
-                SetupHeaderToken();
-                HttpResponseMessage response = await client.PutAsJsonAsync($"{endpoint}/{id}", updatedCustomer);
-
+                lblNotification.Text = "⏳ Đang cập nhật...";
+                var response = await ApiClientService.PutAsJsonWithAuthAsync($"{endpoint}/{id}", updateCustomer);
                 if (response.IsSuccessStatusCode)
                 {
-                    MessageBox.Show("Cập nhật thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    lblNotification.Text = $"✅ Cập nhật khách hàng [{name}] thành công!";
+                    lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
+                    MessageBox.Show("Cập nhật thông tin khách hàng thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await LoadDataAsync();
                 }
                 else
@@ -140,24 +213,26 @@ namespace MiniSupermarket.WinForms
 
         private async void btnDelete_Click(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(txtCustomerId.Text) || !int.TryParse(txtCustomerId.Text, out int id))
+            if (!int.TryParse(txtCustomerId.Text, out int id) || id <= 0)
             {
-                MessageBox.Show("Vui lòng chọn khách hàng cần xóa từ bảng!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Vui lòng chọn khách hàng cần xóa từ danh sách!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            var confirm = MessageBox.Show($"Bạn có chắc chắn muốn xóa khách hàng có ID = {id} không?", "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            var confirm = MessageBox.Show($"Bạn có chắc chắn muốn xóa khách hàng [{txtCustomerName.Text}]?", "Xác nhận xóa", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
             if (confirm == DialogResult.Yes)
             {
                 try
                 {
-                    SetupHeaderToken();
-                    HttpResponseMessage response = await client.DeleteAsync($"{endpoint}/{id}");
-
+                    lblNotification.Text = "⏳ Đang xóa khách hàng...";
+                    var response = await ApiClientService.DeleteWithAuthAsync($"{endpoint}/{id}");
                     if (response.IsSuccessStatusCode)
                     {
-                        MessageBox.Show("Xóa thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        lblNotification.Text = $"✅ Đã xóa khách hàng [ID: {id}] thành công!";
+                        lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
+                        MessageBox.Show("Xóa khách hàng thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         await LoadDataAsync();
+                        ClearInputs();
                     }
                     else
                     {
@@ -175,7 +250,7 @@ namespace MiniSupermarket.WinForms
         private async void btnSearch_Click(object sender, EventArgs e)
         {
             string keyword = txtSearch.Text.Trim();
-            if (string.IsNullOrEmpty(keyword))
+            if (string.IsNullOrWhiteSpace(keyword))
             {
                 await LoadDataAsync();
                 return;
@@ -183,27 +258,20 @@ namespace MiniSupermarket.WinForms
 
             try
             {
-                SetupHeaderToken();
-                var customers = await client.GetFromJsonAsync<List<CustomerDto>>($"{endpoint}/search?keyword={Uri.EscapeDataString(keyword)}");
-                dgvCustomers.DataSource = customers;
+                lblNotification.Text = $"🔍 Đang tìm kiếm '{keyword}'...";
+                var searchResults = await ApiClientService.GetFromJsonWithAuthAsync<List<CustomerDto>>($"{endpoint}/search?keyword={Uri.EscapeDataString(keyword)}");
+                if (searchResults != null)
+                {
+                    dgvCustomers.DataSource = null;
+                    dgvCustomers.DataSource = searchResults;
+                    ConfigureGridColumns();
+                    lblNotification.Text = $"✅ Tìm thấy {searchResults.Count} kết quả cho '{keyword}'.";
+                    lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
+                }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Lỗi tìm kiếm: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void dgvCustomers_CellClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.RowIndex >= 0)
-            {
-                DataGridViewRow row = dgvCustomers.Rows[e.RowIndex];
-                txtCustomerId.Text = row.Cells["CustomerId"]?.Value?.ToString() ?? "";
-                txtCustomerName.Text = row.Cells["CustomerName"]?.Value?.ToString() ?? "";
-                txtPhoneNumber.Text = row.Cells["PhoneNumber"]?.Value?.ToString() ?? "";
-                txtAddress.Text = row.Cells["Address"]?.Value?.ToString() ?? "";
-                txtRewardPoints.Text = row.Cells["RewardPoints"]?.Value?.ToString() ?? "0";
-                txtMembershipRank.Text = row.Cells["MembershipRank"]?.Value?.ToString() ?? "";
             }
         }
 
@@ -213,9 +281,11 @@ namespace MiniSupermarket.WinForms
             txtCustomerName.Clear();
             txtPhoneNumber.Clear();
             txtAddress.Clear();
-            txtRewardPoints.Clear();
-            txtMembershipRank.Clear();
+            nudRewardPoints.Value = 0;
+            if (cboMembershipRank.Items.Count > 0) cboMembershipRank.SelectedIndex = 0;
             txtSearch.Clear();
+            lblNotification.Text = "Hệ thống sẵn sàng.";
+            lblNotification.ForeColor = Color.FromArgb(71, 85, 105);
         }
     }
 
@@ -224,8 +294,8 @@ namespace MiniSupermarket.WinForms
         public int CustomerId { get; set; }
         public string CustomerName { get; set; } = string.Empty;
         public string PhoneNumber { get; set; } = string.Empty;
-        public string Address { get; set; } = string.Empty;
+        public string? Address { get; set; }
         public int RewardPoints { get; set; }
-        public string MembershipRank { get; set; } = string.Empty;
+        public string? MembershipRank { get; set; }
     }
 }

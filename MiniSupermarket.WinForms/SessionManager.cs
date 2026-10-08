@@ -1,4 +1,4 @@
-﻿using System.Net.Http.Headers;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -9,11 +9,18 @@ namespace MiniSupermarket.WinForms
         public static string JwtToken { get; set; } = string.Empty;
         public static string CurrentRole { get; set; } = string.Empty;
         public static string CurrentUsername { get; set; } = string.Empty;
+        public static string CurrentFullName { get; set; } = string.Empty;
     }
 
     public static class ApiClientService
     {
-        private static readonly HttpClient _client = new HttpClient
+        private static readonly HttpClientHandler _handler = new HttpClientHandler
+        {
+            // Bỏ qua lỗi SSL self-signed khi chạy thử nghiệm trên máy localhost
+            ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+        };
+
+        private static readonly HttpClient _client = new HttpClient(_handler)
         {
             BaseAddress = new Uri("https://localhost:7167/api/")
         };
@@ -63,33 +70,64 @@ namespace MiniSupermarket.WinForms
         }
 
         // =========================================================================
-        // LOGIN (GIỮ NGUYÊN)
+        // LOGIN XỬ LÝ ĐẦY ĐỦ THÔNG TIN VÀ THÔNG BÁO LỖI TỪ SERVER
         // =========================================================================
-        public static async Task<bool> LoginAsync(string username, string password)
+        public static async Task<(bool Success, string Message)> LoginAsync(string username, string password)
         {
-            var loginObj = new
+            try
             {
-                Username = username,
-                Password = password
-            };
+                var loginObj = new
+                {
+                    Username = username,
+                    Password = password
+                };
 
-            var response = await _client.PostAsJsonAsync("auth/login", loginObj);
+                var response = await _client.PostAsJsonAsync("auth/login", loginObj);
+                var jsonString = await response.Content.ReadAsStringAsync();
 
-            if (!response.IsSuccessStatusCode)
-                return false;
+                if (!response.IsSuccessStatusCode)
+                {
+                    string errorMsg = "Sai tài khoản hoặc mật khẩu!";
+                    try
+                    {
+                        using var errDoc = JsonDocument.Parse(jsonString);
+                        if (errDoc.RootElement.TryGetProperty("message", out var msgProp))
+                        {
+                            errorMsg = msgProp.GetString() ?? errorMsg;
+                        }
+                    }
+                    catch { }
+                    return (false, errorMsg);
+                }
 
-            var jsonString = await response.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(jsonString);
 
-            using var doc = JsonDocument.Parse(jsonString);
+                SessionManager.JwtToken = doc.RootElement.GetProperty("token").GetString() ?? "";
+                SessionManager.CurrentRole = doc.RootElement.GetProperty("role").GetString() ?? "";
+                SessionManager.CurrentUsername = username;
 
-            SessionManager.JwtToken = doc.RootElement.GetProperty("token").GetString() ?? "";
-            SessionManager.CurrentRole = doc.RootElement.GetProperty("role").GetString() ?? "";
-            SessionManager.CurrentUsername = username;
+                if (doc.RootElement.TryGetProperty("fullName", out var fnProp))
+                {
+                    SessionManager.CurrentFullName = fnProp.GetString() ?? username;
+                }
+                else
+                {
+                    SessionManager.CurrentFullName = username;
+                }
 
-            // Ngay sau khi login thành công, cấu hình token vào client luôn
-            SetupHeaderToken();
+                // Ngay sau khi login thành công, cấu hình token vào client luôn
+                SetupHeaderToken();
 
-            return !string.IsNullOrEmpty(SessionManager.JwtToken);
+                return (true, "Đăng nhập thành công!");
+            }
+            catch (HttpRequestException ex)
+            {
+                return (false, $"Không thể kết nối đến Web API máy chủ ({_client.BaseAddress}): {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                return (false, $"Lỗi hệ thống trong quá trình đăng nhập: {ex.Message}");
+            }
         }
 
         // GET CÓ JWT (Dạng thủ công qua HttpRequestMessage - GIỮ NGUYÊN CỦA BẠN)

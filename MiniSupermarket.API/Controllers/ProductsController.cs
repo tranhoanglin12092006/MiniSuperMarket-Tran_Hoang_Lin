@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniSupermarket.API.Models; // Namespace chứa model Product của bạn
@@ -74,6 +74,45 @@ namespace MiniSupermarket.API.Controllers
             return Ok(product);
         }
 
+        // GET: api/products/barcode/{barcode}
+        [HttpGet("barcode/{barcode}")]
+        public async Task<IActionResult> GetProductByBarcode(string barcode)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(barcode))
+                {
+                    return BadRequest(new { message = "Mã vạch không được để trống!" });
+                }
+
+                var product = await _context.Products
+                    .Include(p => p.Category)
+                    .Where(p => p.Barcode == barcode.Trim())
+                    .Select(p => new
+                    {
+                        productId = p.ProductId,
+                        barcode = p.Barcode,
+                        productName = p.ProductName,
+                        price = p.Price,
+                        stockQuantity = p.StockQuantity,
+                        categoryId = p.CategoryId,
+                        categoryName = p.Category != null ? p.Category.CategoryName : "Chưa phân loại"
+                    })
+                    .FirstOrDefaultAsync();
+
+                if (product == null)
+                {
+                    return NotFound(new { message = $"Không tìm thấy sản phẩm với mã vạch '{barcode}'!" });
+                }
+
+                return Ok(product);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi khi tìm sản phẩm theo mã vạch: " + ex.Message });
+            }
+        }
+
         // POST: api/products
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] ProductCreateDto dto)
@@ -85,10 +124,41 @@ namespace MiniSupermarket.API.Controllers
                     return BadRequest(ModelState);
                 }
 
+                if (string.IsNullOrWhiteSpace(dto.Barcode) || string.IsNullOrWhiteSpace(dto.ProductName))
+                {
+                    return BadRequest(new { message = "Mã vạch và Tên sản phẩm không được để trống!" });
+                }
+
+                // Kiểm tra trùng mã vạch
+                var duplicateBarcode = await _context.Products.AnyAsync(p => p.Barcode == dto.Barcode.Trim());
+                if (duplicateBarcode)
+                {
+                    return Conflict(new { message = $"Mã vạch '{dto.Barcode}' đã tồn tại trong hệ thống!" });
+                }
+
+                // Kiểm tra Category hợp lệ
+                if (dto.CategoryId > 0)
+                {
+                    var catExists = await _context.Categories.AnyAsync(c => c.CategoryId == dto.CategoryId);
+                    if (!catExists)
+                    {
+                        return BadRequest(new { message = $"Nhóm hàng có ID {dto.CategoryId} không tồn tại!" });
+                    }
+                }
+                else
+                {
+                    // Lấy nhóm mặc định đầu tiên nếu chưa chọn
+                    var firstCat = await _context.Categories.FirstOrDefaultAsync();
+                    if (firstCat != null)
+                    {
+                        dto.CategoryId = firstCat.CategoryId;
+                    }
+                }
+
                 var product = new Product
                 {
-                    Barcode = dto.Barcode,
-                    ProductName = dto.ProductName,
+                    Barcode = dto.Barcode.Trim(),
+                    ProductName = dto.ProductName.Trim(),
                     Price = dto.Price,
                     StockQuantity = dto.StockQuantity,
                     CategoryId = dto.CategoryId
@@ -101,7 +171,7 @@ namespace MiniSupermarket.API.Controllers
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Lỗi khi thêm sản phẩm: " + ex.Message });
+                return StatusCode(500, new { message = "Lỗi khi thêm sản phẩm: " + (ex.InnerException?.Message ?? ex.Message) });
             }
         }
 

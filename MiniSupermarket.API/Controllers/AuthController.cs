@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MiniSupermarket.API.Data; // Thêm namespace chứa DbContext của bạn
@@ -31,13 +31,31 @@ namespace MiniSupermarket.API.Controllers
                 return BadRequest(new { success = false, message = "Vui lòng nhập đầy đủ tài khoản và mật khẩu!" });
             }
 
-            // Truy vấn trực tiếp từ cơ sở dữ liệu thông qua EF Core
+            // Truy vấn theo Username (không phân biệt hoa thường và loại bỏ khoảng trắng thừa)
+            var normalizedUsername = request.Username.Trim();
             var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == request.Username && u.Password == request.Password);
+                .FirstOrDefaultAsync(u => u.Username.ToLower() == normalizedUsername.ToLower());
 
-            if (user == null)
+            if (user == null || !MiniSupermarket.API.Helpers.PasswordHelper.VerifyPassword(request.Password, user.Password))
             {
                 return Unauthorized(new { success = false, message = "Sai tài khoản hoặc mật khẩu!" });
+            }
+
+            // Kiểm tra trạng thái khóa tài khoản
+            if (!user.IsActive)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new 
+                { 
+                    success = false, 
+                    message = "Tài khoản của bạn đã bị khóa! Vui lòng liên hệ Quản trị viên để mở khóa." 
+                });
+            }
+
+            // Nếu mật khẩu trong DB chưa băm (plain text), tự động nâng cấp sang băm BCrypt
+            if (!MiniSupermarket.API.Helpers.PasswordHelper.IsHashed(user.Password))
+            {
+                user.Password = MiniSupermarket.API.Helpers.PasswordHelper.HashPassword(request.Password);
+                await _context.SaveChangesAsync();
             }
 
             // Tạo Token dựa trên Role thực tế của user lấy từ database
@@ -48,6 +66,7 @@ namespace MiniSupermarket.API.Controllers
                 success = true,
                 token = token,
                 role = user.Role,
+                username = user.Username,
                 fullName = user.FullName
             });
         }

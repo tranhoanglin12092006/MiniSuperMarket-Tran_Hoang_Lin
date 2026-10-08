@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using MiniSupermarket.API.Models;
 
 namespace MiniSupermarket.API.Data
@@ -34,6 +34,41 @@ namespace MiniSupermarket.API.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // =====================================================
+            // CẤU HÌNH TỰ ĐỘNG TĂNG (IDENTITY / AUTO-INCREMENT)
+            // =====================================================
+            modelBuilder.Entity<Category>(entity =>
+            {
+                entity.HasKey(c => c.CategoryId);
+                entity.Property(c => c.CategoryId)
+                      .ValueGeneratedOnAdd()
+                      .UseIdentityColumn(1, 1);
+            });
+
+            modelBuilder.Entity<Product>(entity =>
+            {
+                entity.HasKey(p => p.ProductId);
+                entity.Property(p => p.ProductId)
+                      .ValueGeneratedOnAdd()
+                      .UseIdentityColumn(1, 1);
+            });
+
+            modelBuilder.Entity<Customer>(entity =>
+            {
+                entity.HasKey(c => c.CustomerId);
+                entity.Property(c => c.CustomerId)
+                      .ValueGeneratedOnAdd()
+                      .UseIdentityColumn(1, 1);
+            });
+
+            modelBuilder.Entity<User>(entity =>
+            {
+                entity.HasKey(u => u.UserId);
+                entity.Property(u => u.UserId)
+                      .ValueGeneratedOnAdd()
+                      .UseIdentityColumn(1, 1);
+            });
 
             // =====================================================
             // 1. DỮ LIỆU MẪU CHO CATEGORY
@@ -471,7 +506,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Nguyễn Quản Trị",
                     Role = "Admin",
-                    FunctionScope = "Toàn quyền toàn bộ hệ thống"
+                    FunctionScope = "Toàn quyền toàn bộ hệ thống",
+                    IsActive = true
                 },
                 new User
                 {
@@ -480,7 +516,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Trần Giám Đốc",
                     Role = "Admin",
-                    FunctionScope = "Toàn quyền toàn bộ hệ thống"
+                    FunctionScope = "Toàn quyền toàn bộ hệ thống",
+                    IsActive = true
                 },
                 new User
                 {
@@ -489,7 +526,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Lê Thu Ngân",
                     Role = "Cashier",
-                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên",
+                    IsActive = true
                 },
                 new User
                 {
@@ -498,7 +536,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Phạm Bán Hàng",
                     Role = "Cashier",
-                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên",
+                    IsActive = true
                 },
                 new User
                 {
@@ -507,7 +546,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Hoàng Thu Ngân",
                     Role = "Cashier",
-                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên",
+                    IsActive = true
                 },
                 new User
                 {
@@ -516,7 +556,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Vũ Thị Quầy",
                     Role = "Cashier",
-                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên",
+                    IsActive = true
                 },
                 new User
                 {
@@ -525,7 +566,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Đỗ Bán Lẻ",
                     Role = "Cashier",
-                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên",
+                    IsActive = true
                 },
                 new User
                 {
@@ -534,7 +576,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Ngô Quản Kho",
                     Role = "Warehouse",
-                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
+                    IsActive = true
                 },
                 new User
                 {
@@ -543,7 +586,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Bùi Kiểm Kê",
                     Role = "Warehouse",
-                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
+                    IsActive = true
                 },
                 new User
                 {
@@ -552,7 +596,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Dương Thủ Kho",
                     Role = "Warehouse",
-                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
+                    IsActive = true
                 },
                 new User
                 {
@@ -561,7 +606,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Lý Nhập Hàng",
                     Role = "Warehouse",
-                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
+                    IsActive = true
                 },
                 new User
                 {
@@ -570,7 +616,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Đặng Hỗ Trợ",
                     Role = "Admin",
-                    FunctionScope = "Toàn quyền toàn bộ hệ thống"
+                    FunctionScope = "Toàn quyền toàn bộ hệ thống",
+                    IsActive = true
                 },
                 new User
                 {
@@ -579,7 +626,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Hồ Ca Chiều",
                     Role = "Cashier",
-                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên",
+                    IsActive = true
                 },
                 new User
                 {
@@ -588,7 +636,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Trương Vận Chuyển",
                     Role = "Warehouse",
-                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
+                    IsActive = true
                 },
                 new User
                 {
@@ -597,7 +646,8 @@ namespace MiniSupermarket.API.Data
                     Password = "123456",
                     FullName = "Mai Giám Sát",
                     Role = "Admin",
-                    FunctionScope = "Toàn quyền toàn bộ hệ thống"
+                    FunctionScope = "Toàn quyền toàn bộ hệ thống",
+                    IsActive = true
                 }
             );
         }

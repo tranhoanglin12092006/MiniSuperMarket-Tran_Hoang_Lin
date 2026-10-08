@@ -1,4 +1,4 @@
-﻿
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using MiniSupermarket.API.Data;
@@ -58,6 +58,29 @@ namespace MiniSupermarket.API.Controllers
             return Ok(customer);
         }
 
+        // =========================================================
+        // 2.5. GET: Lấy khách hàng theo số điện thoại
+        // GET /api/customers/phone/{phone}
+        // =========================================================
+        [HttpGet("phone/{phone}")]
+        public async Task<IActionResult> GetByPhone(string phone)
+        {
+            if (string.IsNullOrWhiteSpace(phone))
+            {
+                return BadRequest(new { message = "Số điện thoại không được để trống!" });
+            }
+
+            var customer = await _context.Customers
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.PhoneNumber == phone.Trim());
+
+            if (customer == null)
+            {
+                return NotFound(new { message = "Không tìm thấy khách hàng với số điện thoại này!" });
+            }
+
+            return Ok(customer);
+        }
 
         // =========================================================
         // 3. SEARCH: Tìm kiếm theo tên hoặc số điện thoại
