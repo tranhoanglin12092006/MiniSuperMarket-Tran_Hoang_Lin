@@ -48,16 +48,22 @@ namespace MiniSupermarket.WinForms
 
                     MessageBox.Show($"Đăng nhập thành công với quyền: {SessionManager.CurrentRole}", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                    // Mở Form quản lý chính (FormCategoryManagement) và ẩn Form đăng nhập đi
-                    FormCategoryManagement mainForm = new FormCategoryManagement();
-                    this.Hide();
-                    mainForm.Show();
+                    //// Mở Form quản lý chính (FormCategoryManagement) và ẩn Form đăng nhập đi
+                    //FormCategoryManagement mainForm = new FormCategoryManagement();
+                    //this.Hide();
+                    //mainForm.Show();
+                    ////this.Close(); // Đóng hẳn ứng dụng khi form chính tắt
+
+                    //// Mở Form quản lý chính (FormCategoryManagement) và ẩn Form đăng nhập đi
+                    //FormCustomerManagement mainForm1 = new FormCustomerManagement();
+                    ////this.Hide();
+                    //mainForm1.Show();
                     //this.Close(); // Đóng hẳn ứng dụng khi form chính tắt
 
                     // Mở Form quản lý chính (FormCategoryManagement) và ẩn Form đăng nhập đi
-                    FormCustomerManagement mainForm1 = new FormCustomerManagement();
-                    //this.Hide();
-                    mainForm1.Show();
+                    FormMainShell mainForm2 = new FormMainShell();
+                    this.Hide();
+                    mainForm2.Show();
                     //this.Close(); // Đóng hẳn ứng dụng khi form chính tắt
                 }
                 else

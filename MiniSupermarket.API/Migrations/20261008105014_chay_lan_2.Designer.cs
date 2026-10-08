@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MiniSupermarket.API.Data;
 
@@ -10,9 +11,11 @@ using MiniSupermarket.API.Data;
 namespace MiniSupermarket.API.Migrations
 {
     [DbContext(typeof(SupermarketDbContext))]
-    partial class SupermarketDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261008105014_chay_lan_2")]
+    partial class chay_lan_2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -496,9 +499,6 @@ namespace MiniSupermarket.API.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Password")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -524,7 +524,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 1,
                             FullName = "Nguyễn Quản Trị",
                             FunctionScope = "Toàn quyền toàn bộ hệ thống",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Admin",
                             Username = "admin01"
@@ -534,7 +533,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 2,
                             FullName = "Trần Giám Đốc",
                             FunctionScope = "Toàn quyền toàn bộ hệ thống",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Admin",
                             Username = "admin02"
@@ -544,7 +542,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 3,
                             FullName = "Lê Thu Ngân",
                             FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Cashier",
                             Username = "cashier01"
@@ -554,7 +551,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 4,
                             FullName = "Phạm Bán Hàng",
                             FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Cashier",
                             Username = "cashier02"
@@ -564,7 +560,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 5,
                             FullName = "Hoàng Thu Ngân",
                             FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Cashier",
                             Username = "cashier03"
@@ -574,7 +569,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 6,
                             FullName = "Vũ Thị Quầy",
                             FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Cashier",
                             Username = "cashier04"
@@ -584,7 +578,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 7,
                             FullName = "Đỗ Bán Lẻ",
                             FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Cashier",
                             Username = "cashier05"
@@ -594,7 +587,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 8,
                             FullName = "Ngô Quản Kho",
                             FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Warehouse",
                             Username = "ware01"
@@ -604,7 +596,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 9,
                             FullName = "Bùi Kiểm Kê",
                             FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Warehouse",
                             Username = "ware02"
@@ -614,7 +605,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 10,
                             FullName = "Dương Thủ Kho",
                             FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Warehouse",
                             Username = "ware03"
@@ -624,7 +614,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 11,
                             FullName = "Lý Nhập Hàng",
                             FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Warehouse",
                             Username = "ware04"
@@ -634,7 +623,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 12,
                             FullName = "Đặng Hỗ Trợ",
                             FunctionScope = "Toàn quyền toàn bộ hệ thống",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Admin",
                             Username = "admin_backup"
@@ -644,7 +632,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 13,
                             FullName = "Hồ Ca Chiều",
                             FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Cashier",
                             Username = "cashier06"
@@ -654,7 +641,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 14,
                             FullName = "Trương Vận Chuyển",
                             FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Warehouse",
                             Username = "ware05"
@@ -664,7 +650,6 @@ namespace MiniSupermarket.API.Migrations
                             UserId = 15,
                             FullName = "Mai Giám Sát",
                             FunctionScope = "Toàn quyền toàn bộ hệ thống",
-                            IsActive = false,
                             Password = "123456",
                             Role = "Admin",
                             Username = "supervisor"

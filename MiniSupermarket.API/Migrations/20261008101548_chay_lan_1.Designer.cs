@@ -2,6 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MiniSupermarket.API.Data;
 
@@ -10,9 +11,11 @@ using MiniSupermarket.API.Data;
 namespace MiniSupermarket.API.Migrations
 {
     [DbContext(typeof(SupermarketDbContext))]
-    partial class SupermarketDbContextModelSnapshot : ModelSnapshot
+    [Migration("20261008101548_chay_lan_1")]
+    partial class chay_lan_1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -475,199 +478,6 @@ namespace MiniSupermarket.API.Migrations
                             Price = 99000m,
                             ProductName = "Combo Ăn Vặt Siêu Cay",
                             StockQuantity = 50
-                        });
-                });
-
-            modelBuilder.Entity("MiniSupermarket.API.Models.User", b =>
-                {
-                    b.Property<int>("UserId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
-
-                    b.Property<string>("FullName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<string>("FunctionScope")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("Password")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.HasKey("UserId");
-
-                    b.ToTable("Users");
-
-                    b.HasData(
-                        new
-                        {
-                            UserId = 1,
-                            FullName = "Nguyễn Quản Trị",
-                            FunctionScope = "Toàn quyền toàn bộ hệ thống",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Admin",
-                            Username = "admin01"
-                        },
-                        new
-                        {
-                            UserId = 2,
-                            FullName = "Trần Giám Đốc",
-                            FunctionScope = "Toàn quyền toàn bộ hệ thống",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Admin",
-                            Username = "admin02"
-                        },
-                        new
-                        {
-                            UserId = 3,
-                            FullName = "Lê Thu Ngân",
-                            FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Cashier",
-                            Username = "cashier01"
-                        },
-                        new
-                        {
-                            UserId = 4,
-                            FullName = "Phạm Bán Hàng",
-                            FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Cashier",
-                            Username = "cashier02"
-                        },
-                        new
-                        {
-                            UserId = 5,
-                            FullName = "Hoàng Thu Ngân",
-                            FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Cashier",
-                            Username = "cashier03"
-                        },
-                        new
-                        {
-                            UserId = 6,
-                            FullName = "Vũ Thị Quầy",
-                            FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Cashier",
-                            Username = "cashier04"
-                        },
-                        new
-                        {
-                            UserId = 7,
-                            FullName = "Đỗ Bán Lẻ",
-                            FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Cashier",
-                            Username = "cashier05"
-                        },
-                        new
-                        {
-                            UserId = 8,
-                            FullName = "Ngô Quản Kho",
-                            FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Warehouse",
-                            Username = "ware01"
-                        },
-                        new
-                        {
-                            UserId = 9,
-                            FullName = "Bùi Kiểm Kê",
-                            FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Warehouse",
-                            Username = "ware02"
-                        },
-                        new
-                        {
-                            UserId = 10,
-                            FullName = "Dương Thủ Kho",
-                            FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Warehouse",
-                            Username = "ware03"
-                        },
-                        new
-                        {
-                            UserId = 11,
-                            FullName = "Lý Nhập Hàng",
-                            FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Warehouse",
-                            Username = "ware04"
-                        },
-                        new
-                        {
-                            UserId = 12,
-                            FullName = "Đặng Hỗ Trợ",
-                            FunctionScope = "Toàn quyền toàn bộ hệ thống",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Admin",
-                            Username = "admin_backup"
-                        },
-                        new
-                        {
-                            UserId = 13,
-                            FullName = "Hồ Ca Chiều",
-                            FunctionScope = "Màn hình POS, Khách hàng thành viên",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Cashier",
-                            Username = "cashier06"
-                        },
-                        new
-                        {
-                            UserId = 14,
-                            FullName = "Trương Vận Chuyển",
-                            FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Warehouse",
-                            Username = "ware05"
-                        },
-                        new
-                        {
-                            UserId = 15,
-                            FullName = "Mai Giám Sát",
-                            FunctionScope = "Toàn quyền toàn bộ hệ thống",
-                            IsActive = false,
-                            Password = "123456",
-                            Role = "Admin",
-                            Username = "supervisor"
                         });
                 });
 

@@ -24,6 +24,9 @@ namespace MiniSupermarket.API.Data
         // Bảng Customers
         public DbSet<Customer> Customers { get; set; }
 
+        // Bảng Users (Nhân viên / Tài khoản hệ thống)
+        public DbSet<User> Users { get; set; }
+
 
         // =========================================================
         // DATA SEEDING
@@ -143,6 +146,10 @@ namespace MiniSupermarket.API.Data
                 }
 
             );
+
+            // =====================================================
+            // 2. DỮ LIỆU MẪU CHO PRODUCT
+            // =====================================================
 
             modelBuilder.Entity<Product>().HasData(
                 new Product
@@ -297,7 +304,7 @@ namespace MiniSupermarket.API.Data
             );
 
             // =====================================================
-            // 2. DỮ LIỆU MẪU CHO CUSTOMER
+            // 3. DỮ LIỆU MẪU CHO CUSTOMER
             // =====================================================
 
             modelBuilder.Entity<Customer>().HasData(
@@ -450,7 +457,148 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 40,
                     Address = "302 Nguyễn Oanh, Phường 17, Quận Gò Vấp, TP. Hồ Chí Minh"
                 }
+            );
 
+            // =====================================================
+            // 4. DỮ LIỆU MẪU CHO USER (NHÂN VIÊN / TÀI KHOẢN HỆ THỐNG)
+            // =====================================================
+
+            modelBuilder.Entity<User>().HasData(
+                new User
+                {
+                    UserId = 1,
+                    Username = "admin01",
+                    Password = "123456",
+                    FullName = "Nguyễn Quản Trị",
+                    Role = "Admin",
+                    FunctionScope = "Toàn quyền toàn bộ hệ thống"
+                },
+                new User
+                {
+                    UserId = 2,
+                    Username = "admin02",
+                    Password = "123456",
+                    FullName = "Trần Giám Đốc",
+                    Role = "Admin",
+                    FunctionScope = "Toàn quyền toàn bộ hệ thống"
+                },
+                new User
+                {
+                    UserId = 3,
+                    Username = "cashier01",
+                    Password = "123456",
+                    FullName = "Lê Thu Ngân",
+                    Role = "Cashier",
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                },
+                new User
+                {
+                    UserId = 4,
+                    Username = "cashier02",
+                    Password = "123456",
+                    FullName = "Phạm Bán Hàng",
+                    Role = "Cashier",
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                },
+                new User
+                {
+                    UserId = 5,
+                    Username = "cashier03",
+                    Password = "123456",
+                    FullName = "Hoàng Thu Ngân",
+                    Role = "Cashier",
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                },
+                new User
+                {
+                    UserId = 6,
+                    Username = "cashier04",
+                    Password = "123456",
+                    FullName = "Vũ Thị Quầy",
+                    Role = "Cashier",
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                },
+                new User
+                {
+                    UserId = 7,
+                    Username = "cashier05",
+                    Password = "123456",
+                    FullName = "Đỗ Bán Lẻ",
+                    Role = "Cashier",
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                },
+                new User
+                {
+                    UserId = 8,
+                    Username = "ware01",
+                    Password = "123456",
+                    FullName = "Ngô Quản Kho",
+                    Role = "Warehouse",
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                },
+                new User
+                {
+                    UserId = 9,
+                    Username = "ware02",
+                    Password = "123456",
+                    FullName = "Bùi Kiểm Kê",
+                    Role = "Warehouse",
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                },
+                new User
+                {
+                    UserId = 10,
+                    Username = "ware03",
+                    Password = "123456",
+                    FullName = "Dương Thủ Kho",
+                    Role = "Warehouse",
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                },
+                new User
+                {
+                    UserId = 11,
+                    Username = "ware04",
+                    Password = "123456",
+                    FullName = "Lý Nhập Hàng",
+                    Role = "Warehouse",
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                },
+                new User
+                {
+                    UserId = 12,
+                    Username = "admin_backup",
+                    Password = "123456",
+                    FullName = "Đặng Hỗ Trợ",
+                    Role = "Admin",
+                    FunctionScope = "Toàn quyền toàn bộ hệ thống"
+                },
+                new User
+                {
+                    UserId = 13,
+                    Username = "cashier06",
+                    Password = "123456",
+                    FullName = "Hồ Ca Chiều",
+                    Role = "Cashier",
+                    FunctionScope = "Màn hình POS, Khách hàng thành viên"
+                },
+                new User
+                {
+                    UserId = 14,
+                    Username = "ware05",
+                    Password = "123456",
+                    FullName = "Trương Vận Chuyển",
+                    Role = "Warehouse",
+                    FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho"
+                },
+                new User
+                {
+                    UserId = 15,
+                    Username = "supervisor",
+                    Password = "123456",
+                    FullName = "Mai Giám Sát",
+                    Role = "Admin",
+                    FunctionScope = "Toàn quyền toàn bộ hệ thống"
+                }
             );
         }
     }
