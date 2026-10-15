@@ -1,3 +1,7 @@
+//Ho va Ten: Tran Hoang Lin
+//MSSV: 2124110134
+
+using System;
 using Microsoft.EntityFrameworkCore;
 using MiniSupermarket.API.Models;
 
@@ -26,6 +30,12 @@ namespace MiniSupermarket.API.Data
 
         // Bảng Users (Nhân viên / Tài khoản hệ thống)
         public DbSet<User> Users { get; set; }
+
+        // Bảng Orders (Hóa đơn thanh toán)
+        public DbSet<Order> Orders { get; set; }
+
+        // Bảng OrderDetails (Chi tiết hóa đơn)
+        public DbSet<OrderDetail> OrderDetails { get; set; }
 
 
         // =========================================================
@@ -70,6 +80,22 @@ namespace MiniSupermarket.API.Data
                       .UseIdentityColumn(1, 1);
             });
 
+            modelBuilder.Entity<Order>(entity =>
+            {
+                entity.HasKey(o => o.OrderId);
+                entity.Property(o => o.OrderId)
+                      .ValueGeneratedOnAdd()
+                      .UseIdentityColumn(1, 1);
+            });
+
+            modelBuilder.Entity<OrderDetail>(entity =>
+            {
+                entity.HasKey(od => od.OrderDetailId);
+                entity.Property(od => od.OrderDetailId)
+                      .ValueGeneratedOnAdd()
+                      .UseIdentityColumn(1, 1);
+            });
+
             // =====================================================
             // 1. DỮ LIỆU MẪU CHO CATEGORY
             // =====================================================
@@ -81,105 +107,90 @@ namespace MiniSupermarket.API.Data
                     CategoryName = "Bánh kẹo & Đồ ăn vặt",
                     Description = "Snack, bánh quy, kẹo dẻo"
                 },
-
                 new Category
                 {
                     CategoryId = 2,
                     CategoryName = "Nước giải khát & Trà",
                     Description = "Nước ngọt, nước khoáng, trà đóng chai"
                 },
-
                 new Category
                 {
                     CategoryId = 3,
                     CategoryName = "Sữa & Sản phẩm từ sữa",
                     Description = "Sữa tươi, sữa chua, phô mai"
                 },
-
                 new Category
                 {
                     CategoryId = 4,
                     CategoryName = "Mì gói & Thực phẩm ăn liền",
                     Description = "Mì ăn liền, phở khô, cháo gói"
                 },
-
                 new Category
                 {
                     CategoryId = 5,
                     CategoryName = "Gia vị & Dầu ăn",
                     Description = "Nước mắm, tương ớt, sốt mayonnaise"
                 },
-
                 new Category
                 {
                     CategoryId = 6,
                     CategoryName = "Khô & Đồ ăn vặt mặn",
                     Description = "Khô gà, khô bò, mực khô, cá khô"
                 },
-
                 new Category
                 {
                     CategoryId = 7,
                     CategoryName = "Hạt & Đồ ăn vặt dinh dưỡng",
                     Description = "Hạt điều, hạnh nhân, đậu phộng, hạt hướng dương"
                 },
-
                 new Category
                 {
                     CategoryId = 8,
                     CategoryName = "Đồ ăn vặt cay",
                     Description = "Snack cay, bánh tráng cay, mì cay"
                 },
-
                 new Category
                 {
                     CategoryId = 9,
                     CategoryName = "Bánh tráng",
                     Description = "Bánh tráng trộn, bánh tráng cuộn, bánh tráng sa tế"
                 },
-
                 new Category
                 {
                     CategoryId = 10,
                     CategoryName = "Đồ ăn vặt ngọt",
                     Description = "Bánh ngọt, kẹo, thạch, socola"
                 },
-
                 new Category
                 {
                     CategoryId = 11,
                     CategoryName = "Trái cây sấy",
                     Description = "Xoài sấy, mít sấy, chuối sấy, khoai lang sấy"
                 },
-
                 new Category
                 {
                     CategoryId = 12,
                     CategoryName = "Đồ ăn vặt đông lạnh",
                     Description = "Xúc xích, cá viên, bò viên, nem chua"
                 },
-
                 new Category
                 {
                     CategoryId = 13,
                     CategoryName = "Cà phê & Thức uống pha sẵn",
                     Description = "Cà phê lon, cà phê hòa tan, cacao"
                 },
-
                 new Category
                 {
                     CategoryId = 14,
                     CategoryName = "Kem & Đồ ăn lạnh",
                     Description = "Kem que, kem hộp, pudding, thạch lạnh"
                 },
-
                 new Category
                 {
                     CategoryId = 15,
                     CategoryName = "Combo đồ ăn vặt",
                     Description = "Combo snack, combo bánh kẹo, combo ăn vặt"
                 }
-
             );
 
             // =====================================================
@@ -196,7 +207,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 100,
                     CategoryId = 1
                 },
-
                 new Product
                 {
                     ProductId = 2,
@@ -206,7 +216,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 80,
                     CategoryId = 1
                 },
-
                 new Product
                 {
                     ProductId = 3,
@@ -216,7 +225,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 120,
                     CategoryId = 1
                 },
-
                 new Product
                 {
                     ProductId = 4,
@@ -226,7 +234,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 100,
                     CategoryId = 2
                 },
-
                 new Product
                 {
                     ProductId = 5,
@@ -236,7 +243,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 150,
                     CategoryId = 2
                 },
-
                 new Product
                 {
                     ProductId = 6,
@@ -246,7 +252,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 90,
                     CategoryId = 3
                 },
-
                 new Product
                 {
                     ProductId = 7,
@@ -256,7 +261,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 100,
                     CategoryId = 3
                 },
-
                 new Product
                 {
                     ProductId = 8,
@@ -266,7 +270,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 80,
                     CategoryId = 4
                 },
-
                 new Product
                 {
                     ProductId = 9,
@@ -276,7 +279,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 90,
                     CategoryId = 4
                 },
-
                 new Product
                 {
                     ProductId = 10,
@@ -286,7 +288,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 70,
                     CategoryId = 6
                 },
-
                 new Product
                 {
                     ProductId = 11,
@@ -296,7 +297,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 60,
                     CategoryId = 6
                 },
-
                 new Product
                 {
                     ProductId = 12,
@@ -306,7 +306,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 80,
                     CategoryId = 7
                 },
-
                 new Product
                 {
                     ProductId = 13,
@@ -316,7 +315,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 100,
                     CategoryId = 9
                 },
-
                 new Product
                 {
                     ProductId = 14,
@@ -326,7 +324,6 @@ namespace MiniSupermarket.API.Data
                     StockQuantity = 60,
                     CategoryId = 11
                 },
-
                 new Product
                 {
                     ProductId = 15,
@@ -352,7 +349,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 150,
                     Address = "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 2,
@@ -362,7 +358,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 80,
                     Address = "45 Lê Văn Việt, Phường Hiệp Phú, Thành phố Thủ Đức, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 3,
@@ -372,7 +367,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 20,
                     Address = "78 Cách Mạng Tháng 8, Phường 6, Quận 3, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 4,
@@ -382,7 +376,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 200,
                     Address = "12 Phan Xích Long, Phường 2, Quận Phú Nhuận, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 5,
@@ -392,7 +385,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 65,
                     Address = "56 Đinh Tiên Hoàng, Phường Đa Kao, Quận 1, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 6,
@@ -402,7 +394,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 15,
                     Address = "89 Nguyễn Văn Trỗi, Phường 8, Quận Phú Nhuận, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 7,
@@ -412,7 +403,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 180,
                     Address = "234 Võ Văn Tần, Phường 5, Quận 3, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 8,
@@ -422,7 +412,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 95,
                     Address = "345 Hai Bà Trưng, Phường 8, Quận 3, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 9,
@@ -432,7 +421,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 30,
                     Address = "67 Lý Tự Trọng, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 10,
@@ -442,7 +430,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 250,
                     Address = "90 Pasteur, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 11,
@@ -452,7 +439,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 70,
                     Address = "15 Hoàng Văn Thụ, Phường 15, Quận Phú Nhuận, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 12,
@@ -462,7 +448,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 25,
                     Address = "228 Cộng Hòa, Phường 12, Quận Tân Bình, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 13,
@@ -472,7 +457,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 320,
                     Address = "510 Trường Chinh, Phường 13, Quận Tân Bình, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 14,
@@ -482,7 +466,6 @@ namespace MiniSupermarket.API.Data
                     RewardPoints = 110,
                     Address = "75 Quang Trung, Phường 10, Quận Gò Vấp, TP. Hồ Chí Minh"
                 },
-
                 new Customer
                 {
                     CustomerId = 15,
@@ -498,6 +481,10 @@ namespace MiniSupermarket.API.Data
             // 4. DỮ LIỆU MẪU CHO USER (NHÂN VIÊN / TÀI KHOẢN HỆ THỐNG)
             // =====================================================
 
+            // =====================================================
+            // 4. DỮ LIỆU MẪU CHO USER (NHÂN VIÊN / TÀI KHOẢN HỆ THỐNG)
+            // =====================================================
+
             modelBuilder.Entity<User>().HasData(
                 new User
                 {
@@ -505,6 +492,7 @@ namespace MiniSupermarket.API.Data
                     Username = "admin01",
                     Password = "123456",
                     FullName = "Nguyễn Quản Trị",
+                    Email = "admin01@minisupermarket.vn",
                     Role = "Admin",
                     FunctionScope = "Toàn quyền toàn bộ hệ thống",
                     IsActive = true
@@ -515,6 +503,7 @@ namespace MiniSupermarket.API.Data
                     Username = "admin02",
                     Password = "123456",
                     FullName = "Trần Giám Đốc",
+                    Email = "admin02@minisupermarket.vn",
                     Role = "Admin",
                     FunctionScope = "Toàn quyền toàn bộ hệ thống",
                     IsActive = true
@@ -525,6 +514,7 @@ namespace MiniSupermarket.API.Data
                     Username = "cashier01",
                     Password = "123456",
                     FullName = "Lê Thu Ngân",
+                    Email = "cashier01@minisupermarket.vn",
                     Role = "Cashier",
                     FunctionScope = "Màn hình POS, Khách hàng thành viên",
                     IsActive = true
@@ -535,6 +525,7 @@ namespace MiniSupermarket.API.Data
                     Username = "cashier02",
                     Password = "123456",
                     FullName = "Phạm Bán Hàng",
+                    Email = "cashier02@minisupermarket.vn",
                     Role = "Cashier",
                     FunctionScope = "Màn hình POS, Khách hàng thành viên",
                     IsActive = true
@@ -545,6 +536,7 @@ namespace MiniSupermarket.API.Data
                     Username = "cashier03",
                     Password = "123456",
                     FullName = "Hoàng Thu Ngân",
+                    Email = "cashier03@minisupermarket.vn",
                     Role = "Cashier",
                     FunctionScope = "Màn hình POS, Khách hàng thành viên",
                     IsActive = true
@@ -555,6 +547,7 @@ namespace MiniSupermarket.API.Data
                     Username = "cashier04",
                     Password = "123456",
                     FullName = "Vũ Thị Quầy",
+                    Email = "cashier04@minisupermarket.vn",
                     Role = "Cashier",
                     FunctionScope = "Màn hình POS, Khách hàng thành viên",
                     IsActive = true
@@ -565,6 +558,7 @@ namespace MiniSupermarket.API.Data
                     Username = "cashier05",
                     Password = "123456",
                     FullName = "Đỗ Bán Lẻ",
+                    Email = "cashier05@minisupermarket.vn",
                     Role = "Cashier",
                     FunctionScope = "Màn hình POS, Khách hàng thành viên",
                     IsActive = true
@@ -575,6 +569,7 @@ namespace MiniSupermarket.API.Data
                     Username = "ware01",
                     Password = "123456",
                     FullName = "Ngô Quản Kho",
+                    Email = "ware01@minisupermarket.vn",
                     Role = "Warehouse",
                     FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
                     IsActive = true
@@ -585,6 +580,7 @@ namespace MiniSupermarket.API.Data
                     Username = "ware02",
                     Password = "123456",
                     FullName = "Bùi Kiểm Kê",
+                    Email = "ware02@minisupermarket.vn",
                     Role = "Warehouse",
                     FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
                     IsActive = true
@@ -595,6 +591,7 @@ namespace MiniSupermarket.API.Data
                     Username = "ware03",
                     Password = "123456",
                     FullName = "Dương Thủ Kho",
+                    Email = "ware03@minisupermarket.vn",
                     Role = "Warehouse",
                     FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
                     IsActive = true
@@ -605,6 +602,7 @@ namespace MiniSupermarket.API.Data
                     Username = "ware04",
                     Password = "123456",
                     FullName = "Lý Nhập Hàng",
+                    Email = "ware04@minisupermarket.vn",
                     Role = "Warehouse",
                     FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
                     IsActive = true
@@ -615,6 +613,7 @@ namespace MiniSupermarket.API.Data
                     Username = "admin_backup",
                     Password = "123456",
                     FullName = "Đặng Hỗ Trợ",
+                    Email = "admin.backup@minisupermarket.vn",
                     Role = "Admin",
                     FunctionScope = "Toàn quyền toàn bộ hệ thống",
                     IsActive = true
@@ -625,6 +624,7 @@ namespace MiniSupermarket.API.Data
                     Username = "cashier06",
                     Password = "123456",
                     FullName = "Hồ Ca Chiều",
+                    Email = "cashier06@minisupermarket.vn",
                     Role = "Cashier",
                     FunctionScope = "Màn hình POS, Khách hàng thành viên",
                     IsActive = true
@@ -635,6 +635,7 @@ namespace MiniSupermarket.API.Data
                     Username = "ware05",
                     Password = "123456",
                     FullName = "Trương Vận Chuyển",
+                    Email = "ware05@minisupermarket.vn",
                     Role = "Warehouse",
                     FunctionScope = "Sản phẩm, Nhóm hàng, Nhập xuất kho",
                     IsActive = true
@@ -645,9 +646,324 @@ namespace MiniSupermarket.API.Data
                     Username = "supervisor",
                     Password = "123456",
                     FullName = "Mai Giám Sát",
+                    Email = "supervisor@minisupermarket.vn",
                     Role = "Admin",
                     FunctionScope = "Toàn quyền toàn bộ hệ thống",
                     IsActive = true
+                }
+            );
+
+            // =====================================================
+            // 5. DỮ LIỆU MẪU CHO ORDER (15 HÓA ĐƠN BÁN ĐỒ ĂN VẶT)
+            // =====================================================
+
+            modelBuilder.Entity<Order>().HasData(
+                new Order
+                {
+                    OrderId = 1,
+                    OrderCode = "HD20261001-001",
+                    CreatedDate = new DateTime(2026, 10, 1, 8, 30, 0),
+                    CustomerId = 1,
+                    CashierUsername = "cashier01",
+                    TotalItems = 2,
+                    FinalAmount = 30000m,
+                    RewardPoints = 3
+                },
+                new Order
+                {
+                    OrderId = 2,
+                    OrderCode = "HD20261001-002",
+                    CreatedDate = new DateTime(2026, 10, 1, 9, 15, 0),
+                    CustomerId = 2,
+                    CashierUsername = "cashier01",
+                    TotalItems = 1,
+                    FinalAmount = 25000m,
+                    RewardPoints = 2
+                },
+                new Order
+                {
+                    OrderId = 3,
+                    OrderCode = "HD20261001-003",
+                    CreatedDate = new DateTime(2026, 10, 1, 10, 0, 0),
+                    CustomerId = 3,
+                    CashierUsername = "cashier02",
+                    TotalItems = 3,
+                    FinalAmount = 60000m,
+                    RewardPoints = 6
+                },
+                new Order
+                {
+                    OrderId = 4,
+                    OrderCode = "HD20261001-004",
+                    CreatedDate = new DateTime(2026, 10, 1, 11, 20, 0),
+                    CustomerId = 4,
+                    CashierUsername = "cashier02",
+                    TotalItems = 2,
+                    FinalAmount = 24000m,
+                    RewardPoints = 2
+                },
+                new Order
+                {
+                    OrderId = 5,
+                    OrderCode = "HD20261002-001",
+                    CreatedDate = new DateTime(2026, 10, 2, 13, 45, 0),
+                    CustomerId = 5,
+                    CashierUsername = "cashier03",
+                    TotalItems = 4,
+                    FinalAmount = 40000m,
+                    RewardPoints = 4
+                },
+                new Order
+                {
+                    OrderId = 6,
+                    OrderCode = "HD20261002-002",
+                    CreatedDate = new DateTime(2026, 10, 2, 14, 10, 0),
+                    CustomerId = 6,
+                    CashierUsername = "cashier03",
+                    TotalItems = 2,
+                    FinalAmount = 30000m,
+                    RewardPoints = 3
+                },
+                new Order
+                {
+                    OrderId = 7,
+                    OrderCode = "HD20261002-003",
+                    CreatedDate = new DateTime(2026, 10, 2, 15, 30, 0),
+                    CustomerId = 7,
+                    CashierUsername = "cashier04",
+                    TotalItems = 5,
+                    FinalAmount = 50000m,
+                    RewardPoints = 5
+                },
+                new Order
+                {
+                    OrderId = 8,
+                    OrderCode = "HD20261003-001",
+                    CreatedDate = new DateTime(2026, 10, 3, 16, 0, 0),
+                    CustomerId = 8,
+                    CashierUsername = "cashier04",
+                    TotalItems = 2,
+                    FinalAmount = 30000m,
+                    RewardPoints = 3
+                },
+                new Order
+                {
+                    OrderId = 9,
+                    OrderCode = "HD20261003-002",
+                    CreatedDate = new DateTime(2026, 10, 3, 17, 25, 0),
+                    CustomerId = 9,
+                    CashierUsername = "cashier05",
+                    TotalItems = 3,
+                    FinalAmount = 36000m,
+                    RewardPoints = 3
+                },
+                new Order
+                {
+                    OrderId = 10,
+                    OrderCode = "HD20261003-003",
+                    CreatedDate = new DateTime(2026, 10, 3, 18, 40, 0),
+                    CustomerId = 10,
+                    CashierUsername = "cashier05",
+                    TotalItems = 2,
+                    FinalAmount = 70000m,
+                    RewardPoints = 7
+                },
+                new Order
+                {
+                    OrderId = 11,
+                    OrderCode = "HD20261004-001",
+                    CreatedDate = new DateTime(2026, 10, 4, 9, 5, 0),
+                    CustomerId = 11,
+                    CashierUsername = "cashier06",
+                    TotalItems = 1,
+                    FinalAmount = 55000m,
+                    RewardPoints = 5
+                },
+                new Order
+                {
+                    OrderId = 12,
+                    OrderCode = "HD20261004-002",
+                    CreatedDate = new DateTime(2026, 10, 4, 10, 50, 0),
+                    CustomerId = 12,
+                    CashierUsername = "cashier06",
+                    TotalItems = 2,
+                    FinalAmount = 40000m,
+                    RewardPoints = 4
+                },
+                new Order
+                {
+                    OrderId = 13,
+                    OrderCode = "HD20261004-003",
+                    CreatedDate = new DateTime(2026, 10, 4, 14, 15, 0),
+                    CustomerId = 13,
+                    CashierUsername = "cashier01",
+                    TotalItems = 3,
+                    FinalAmount = 75000m,
+                    RewardPoints = 7
+                },
+                new Order
+                {
+                    OrderId = 14,
+                    OrderCode = "HD20261005-001",
+                    CreatedDate = new DateTime(2026, 10, 5, 16, 30, 0),
+                    CustomerId = 14,
+                    CashierUsername = "cashier02",
+                    TotalItems = 2,
+                    FinalAmount = 80000m,
+                    RewardPoints = 8
+                },
+                new Order
+                {
+                    OrderId = 15,
+                    OrderCode = "HD20261005-002",
+                    CreatedDate = new DateTime(2026, 10, 5, 19, 0, 0),
+                    CustomerId = 15,
+                    CashierUsername = "cashier03",
+                    TotalItems = 1,
+                    FinalAmount = 99000m,
+                    RewardPoints = 9
+                }
+            );
+
+            // =====================================================
+            // 6. DỮ LIỆU MẪU CHO ORDER DETAIL (15 CHI TIẾT HÓA ĐƠN)
+            // =====================================================
+
+            modelBuilder.Entity<OrderDetail>().HasData(
+                new OrderDetail
+                {
+                    OrderDetailId = 1,
+                    OrderId = 1,
+                    ProductId = 1, // Snack khoai tây vị phô mai
+                    Quantity = 2,
+                    UnitPrice = 15000m,
+                    LineTotal = 30000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 2,
+                    OrderId = 2,
+                    ProductId = 2, // Bánh quy socola
+                    Quantity = 1,
+                    UnitPrice = 25000m,
+                    LineTotal = 25000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 3,
+                    OrderId = 3,
+                    ProductId = 3, // Kẹo dẻo trái cây
+                    Quantity = 3,
+                    UnitPrice = 20000m,
+                    LineTotal = 60000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 4,
+                    OrderId = 4,
+                    ProductId = 4, // Trà đào đóng chai
+                    Quantity = 2,
+                    UnitPrice = 12000m,
+                    LineTotal = 24000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 5,
+                    OrderId = 5,
+                    ProductId = 5, // Nước ngọt Coca Cola
+                    Quantity = 4,
+                    UnitPrice = 10000m,
+                    LineTotal = 40000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 6,
+                    OrderId = 6,
+                    ProductId = 6, // Sữa tươi có đường
+                    Quantity = 2,
+                    UnitPrice = 15000m,
+                    LineTotal = 30000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 7,
+                    OrderId = 7,
+                    ProductId = 7, // Sữa chua vị dâu
+                    Quantity = 5,
+                    UnitPrice = 10000m,
+                    LineTotal = 50000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 8,
+                    OrderId = 8,
+                    ProductId = 8, // Mì cay hải sản
+                    Quantity = 2,
+                    UnitPrice = 15000m,
+                    LineTotal = 30000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 9,
+                    OrderId = 9,
+                    ProductId = 9, // Phở bò ăn liền
+                    Quantity = 3,
+                    UnitPrice = 12000m,
+                    LineTotal = 36000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 10,
+                    OrderId = 10,
+                    ProductId = 10, // Khô gà lá chanh
+                    Quantity = 2,
+                    UnitPrice = 35000m,
+                    LineTotal = 70000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 11,
+                    OrderId = 11,
+                    ProductId = 11, // Khô bò miếng
+                    Quantity = 1,
+                    UnitPrice = 55000m,
+                    LineTotal = 55000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 12,
+                    OrderId = 12,
+                    ProductId = 12, // Hạt hướng dương
+                    Quantity = 2,
+                    UnitPrice = 20000m,
+                    LineTotal = 40000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 13,
+                    OrderId = 13,
+                    ProductId = 13, // Bánh tráng trộn đặc biệt
+                    Quantity = 3,
+                    UnitPrice = 25000m,
+                    LineTotal = 75000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 14,
+                    OrderId = 14,
+                    ProductId = 14, // Xoài sấy dẻo
+                    Quantity = 2,
+                    UnitPrice = 40000m,
+                    LineTotal = 80000m
+                },
+                new OrderDetail
+                {
+                    OrderDetailId = 15,
+                    OrderId = 15,
+                    ProductId = 15, // Combo Ăn Vặt Siêu Cay
+                    Quantity = 1,
+                    UnitPrice = 99000m,
+                    LineTotal = 99000m
                 }
             );
         }

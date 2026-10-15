@@ -102,12 +102,12 @@ namespace MiniSupermarket.WinForms
             dataGridViewCellStyle1.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
             dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             dataGridViewCellStyle1.ForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(8, 0, 0, 0);
+            dataGridViewCellStyle1.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
             dataGridViewCellStyle1.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
             dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.White;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dgvUsers.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            this.dgvUsers.ColumnHeadersHeight = 42;
+            this.dgvUsers.ColumnHeadersHeight = 44;
             this.dgvUsers.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.Color.White;
@@ -273,13 +273,13 @@ namespace MiniSupermarket.WinForms
             this.btnRoleWarehouse.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnRoleWarehouse.FlatAppearance.BorderSize = 0;
             this.btnRoleWarehouse.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRoleWarehouse.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Bold);
+            this.btnRoleWarehouse.Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Bold);
             this.btnRoleWarehouse.ForeColor = System.Drawing.Color.White;
             this.btnRoleWarehouse.Location = new System.Drawing.Point(212, 34);
             this.btnRoleWarehouse.Name = "btnRoleWarehouse";
             this.btnRoleWarehouse.Size = new System.Drawing.Size(98, 38);
             this.btnRoleWarehouse.TabIndex = 3;
-            this.btnRoleWarehouse.Text = "📦 Warehouse";
+            this.btnRoleWarehouse.Text = "📦 Ware";
             this.btnRoleWarehouse.UseVisualStyleBackColor = false;
             this.btnRoleWarehouse.Click += new System.EventHandler(this.btnRoleWarehouse_Click);
             // 
@@ -289,7 +289,7 @@ namespace MiniSupermarket.WinForms
             this.btnRoleCashier.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnRoleCashier.FlatAppearance.BorderSize = 0;
             this.btnRoleCashier.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnRoleCashier.Font = new System.Drawing.Font("Segoe UI", 8F, System.Drawing.FontStyle.Bold);
+            this.btnRoleCashier.Font = new System.Drawing.Font("Segoe UI", 8.5F, System.Drawing.FontStyle.Bold);
             this.btnRoleCashier.ForeColor = System.Drawing.Color.White;
             this.btnRoleCashier.Location = new System.Drawing.Point(109, 34);
             this.btnRoleCashier.Name = "btnRoleCashier";

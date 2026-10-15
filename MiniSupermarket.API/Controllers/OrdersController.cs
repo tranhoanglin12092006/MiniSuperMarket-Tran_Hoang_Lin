@@ -54,11 +54,14 @@ namespace MiniSupermarket.API.Controllers
 
                 // 2. Tích điểm thưởng cho khách hàng (nếu có số điện thoại)
                 Customer? customer = null;
+                int customerId = 1; // Mặc định khách hàng 1 (hoặc khách lẻ)
                 if (!string.IsNullOrWhiteSpace(request.CustomerPhone))
                 {
                     customer = await _context.Customers.FirstOrDefaultAsync(c => c.PhoneNumber == request.CustomerPhone.Trim());
                     if (customer != null)
                     {
+                        customerId = customer.CustomerId;
+
                         // Quy tắc: 10,000 VND = 1 điểm tích lũy
                         int pointsEarned = (int)(totalAmount / 10000m);
                         customer.RewardPoints += pointsEarned;
@@ -73,12 +76,48 @@ namespace MiniSupermarket.API.Controllers
                     }
                 }
 
-                // Lưu các thay đổi xuống database
+                // 3. Tạo bản ghi Hóa đơn (Order)
+                string cashierUser = string.IsNullOrWhiteSpace(request.CashierUsername) ? "cashier01" : request.CashierUsername.Trim();
+                string orderCode = $"HD{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
+                int totalItemsCount = request.Items.Sum(x => x.Quantity);
+                int rewardPoints = (int)(totalAmount / 10000m);
+
+                var order = new Order
+                {
+                    OrderCode = orderCode,
+                    CreatedDate = DateTime.Now,
+                    CustomerId = customerId,
+                    CashierUsername = cashierUser,
+                    TotalItems = totalItemsCount,
+                    FinalAmount = totalAmount,
+                    RewardPoints = rewardPoints
+                };
+
+                _context.Orders.Add(order);
+                await _context.SaveChangesAsync(); // Lưu để sinh OrderId
+
+                // 4. Tạo các bản ghi Chi tiết hóa đơn (OrderDetails)
+                foreach (var item in request.Items)
+                {
+                    var orderDetail = new OrderDetail
+                    {
+                        OrderId = order.OrderId,
+                        ProductId = item.ProductId,
+                        Quantity = item.Quantity,
+                        UnitPrice = item.UnitPrice,
+                        LineTotal = item.Quantity * item.UnitPrice
+                    };
+                    _context.OrderDetails.Add(orderDetail);
+                }
+
+                // Lưu các thay đổi chi tiết và trừ kho xuống database
                 await _context.SaveChangesAsync();
 
                 return Ok(new
                 {
                     message = "Thanh toán thành công!",
+                    orderCode = order.OrderCode,
+                    orderId = order.OrderId,
                     totalAmount = totalAmount,
                     itemCount = request.Items.Count,
                     customerName = customer != null ? customer.CustomerName : "Khách vãng lai",

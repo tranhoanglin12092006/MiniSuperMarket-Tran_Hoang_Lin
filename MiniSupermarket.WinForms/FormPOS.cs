@@ -28,28 +28,32 @@ namespace MiniSupermarket.WinForms
             {
                 DataPropertyName = "ProductId",
                 HeaderText = "Mã SP",
-                Width = 70
+                Width = 85,
+                DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleCenter }
             });
 
             dgvCart.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = "Barcode",
                 HeaderText = "Mã vạch",
-                Width = 150
+                Width = 145,
+                DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleLeft }
             });
 
             dgvCart.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = "ProductName",
                 HeaderText = "Tên Sản Phẩm",
-                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill,
+                MinimumWidth = 150,
+                DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleLeft }
             });
 
             dgvCart.Columns.Add(new DataGridViewTextBoxColumn
             {
                 DataPropertyName = "UnitPriceFormatted",
                 HeaderText = "Đơn Giá",
-                Width = 100,
+                Width = 105,
                 DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight }
             });
 
@@ -65,7 +69,7 @@ namespace MiniSupermarket.WinForms
             {
                 DataPropertyName = "TotalPriceFormatted",
                 HeaderText = "Thành Tiền",
-                Width = 130,
+                Width = 135,
                 DefaultCellStyle = new DataGridViewCellStyle { Alignment = DataGridViewContentAlignment.MiddleRight, Font = new Font("Segoe UI", 9.5f, FontStyle.Bold) }
             });
         }

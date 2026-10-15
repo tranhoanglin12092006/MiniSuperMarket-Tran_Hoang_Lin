@@ -61,17 +61,19 @@ namespace MiniSupermarket.WinForms
 
             if (dgvCategories.Columns["CategoryId"] != null)
             {
-                dgvCategories.Columns["CategoryId"].HeaderText = "Mã ID";
-                dgvCategories.Columns["CategoryId"].Width = 80;
+                dgvCategories.Columns["CategoryId"].HeaderText = "Mã nhóm";
+                dgvCategories.Columns["CategoryId"].Width = 90;
+                dgvCategories.Columns["CategoryId"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             }
             if (dgvCategories.Columns["CategoryName"] != null)
             {
                 dgvCategories.Columns["CategoryName"].HeaderText = "Tên nhóm hàng";
-                dgvCategories.Columns["CategoryName"].Width = 220;
+                dgvCategories.Columns["CategoryName"].Width = 240;
             }
             if (dgvCategories.Columns["Description"] != null)
             {
                 dgvCategories.Columns["Description"].HeaderText = "Mô tả chi tiết";
+                dgvCategories.Columns["Description"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             }
         }
 

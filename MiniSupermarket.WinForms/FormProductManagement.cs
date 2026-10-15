@@ -115,13 +115,13 @@ namespace MiniSupermarket.WinForms
                 }
             }
 
-            SetHeader("productId", "Mã SP", 75, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
-            SetHeader("barcode", "Mã vạch", 135, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleLeft);
-            SetHeader("productName", "Tên sản phẩm", 230, DataGridViewAutoSizeColumnMode.Fill, DataGridViewContentAlignment.MiddleLeft);
-            SetHeader("price", "Đơn giá (VNĐ)", 130, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleRight, "N0");
-            SetHeader("stockQuantity", "Tồn kho", 90, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter, "N0");
-            SetHeader("categoryName", "Nhóm hàng", 160, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleLeft);
-            SetHeader("categoryId", "Mã nhóm", 80, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
+            SetHeader("productId", "Mã SP", 85, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
+            SetHeader("barcode", "Mã vạch", 155, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleLeft);
+            SetHeader("productName", "Tên sản phẩm", 240, DataGridViewAutoSizeColumnMode.Fill, DataGridViewContentAlignment.MiddleLeft);
+            SetHeader("price", "Đơn giá (VNĐ)", 135, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleRight, "N0");
+            SetHeader("stockQuantity", "Tồn kho", 95, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter, "N0");
+            SetHeader("categoryName", "Nhóm hàng", 175, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleLeft);
+            SetHeader("categoryId", "Mã nhóm", 85, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
         }
 
         private DataTable ToDataTable(List<Dictionary<string, object>>? list)

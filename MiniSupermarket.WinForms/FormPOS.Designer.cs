@@ -145,9 +145,9 @@ namespace MiniSupermarket.WinForms
             this.txtBarcode.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.txtBarcode.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Bold);
             this.txtBarcode.ForeColor = System.Drawing.Color.FromArgb(15, 23, 42);
-            this.txtBarcode.Location = new System.Drawing.Point(14, 34);
+            this.txtBarcode.Location = new System.Drawing.Point(14, 32);
             this.txtBarcode.Name = "txtBarcode";
-            this.txtBarcode.Size = new System.Drawing.Size(430, 34);
+            this.txtBarcode.Size = new System.Drawing.Size(425, 34);
             this.txtBarcode.TabIndex = 0;
             this.txtBarcode.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtBarcode_KeyDown);
 
@@ -158,9 +158,9 @@ namespace MiniSupermarket.WinForms
             this.btnAddBarcode.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnAddBarcode.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
             this.btnAddBarcode.ForeColor = System.Drawing.Color.White;
-            this.btnAddBarcode.Location = new System.Drawing.Point(452, 34);
+            this.btnAddBarcode.Location = new System.Drawing.Point(448, 31);
             this.btnAddBarcode.Name = "btnAddBarcode";
-            this.btnAddBarcode.Size = new System.Drawing.Size(100, 34);
+            this.btnAddBarcode.Size = new System.Drawing.Size(105, 36);
             this.btnAddBarcode.TabIndex = 1;
             this.btnAddBarcode.Text = "+ Thêm";
             this.btnAddBarcode.UseVisualStyleBackColor = false;
@@ -168,11 +168,11 @@ namespace MiniSupermarket.WinForms
 
             // lblScanHint
             this.lblScanHint.AutoSize = true;
-            this.lblScanHint.Font = new System.Drawing.Font("Segoe UI", 8F);
+            this.lblScanHint.Font = new System.Drawing.Font("Segoe UI", 8.5F);
             this.lblScanHint.ForeColor = System.Drawing.Color.FromArgb(100, 116, 139);
-            this.lblScanHint.Location = new System.Drawing.Point(558, 42);
+            this.lblScanHint.Location = new System.Drawing.Point(560, 40);
             this.lblScanHint.Name = "lblScanHint";
-            this.lblScanHint.Size = new System.Drawing.Size(95, 19);
+            this.lblScanHint.Size = new System.Drawing.Size(95, 20);
             this.lblScanHint.Text = "Nhấn Enter ↵";
 
             // 
@@ -214,10 +214,10 @@ namespace MiniSupermarket.WinForms
             dgvCellStyleHeader.BackColor = System.Drawing.Color.FromArgb(15, 23, 42); // Slate 900
             dgvCellStyleHeader.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             dgvCellStyleHeader.ForeColor = System.Drawing.Color.White;
-            dgvCellStyleHeader.Padding = new System.Windows.Forms.Padding(6, 0, 6, 0);
-            dgvCellStyleHeader.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            dgvCellStyleHeader.Padding = new System.Windows.Forms.Padding(8, 0, 8, 0);
+            dgvCellStyleHeader.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dgvCart.ColumnHeadersDefaultCellStyle = dgvCellStyleHeader;
-            this.dgvCart.ColumnHeadersHeight = 38;
+            this.dgvCart.ColumnHeadersHeight = 45;
             this.dgvCart.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.DisableResizing;
             dgvCellStyleCell.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dgvCellStyleCell.BackColor = System.Drawing.Color.White;
@@ -342,10 +342,10 @@ namespace MiniSupermarket.WinForms
             // txtCustomerPhone
             this.txtCustomerPhone.BackColor = System.Drawing.Color.White;
             this.txtCustomerPhone.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.txtCustomerPhone.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.txtCustomerPhone.Font = new System.Drawing.Font("Segoe UI", 11F);
             this.txtCustomerPhone.Location = new System.Drawing.Point(12, 30);
             this.txtCustomerPhone.Name = "txtCustomerPhone";
-            this.txtCustomerPhone.Size = new System.Drawing.Size(210, 30);
+            this.txtCustomerPhone.Size = new System.Drawing.Size(205, 32);
             this.txtCustomerPhone.TabIndex = 0;
             this.txtCustomerPhone.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtCustomerPhone_KeyDown);
 
@@ -354,13 +354,13 @@ namespace MiniSupermarket.WinForms
             this.btnSearchCustomer.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnSearchCustomer.FlatAppearance.BorderSize = 0;
             this.btnSearchCustomer.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnSearchCustomer.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnSearchCustomer.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
             this.btnSearchCustomer.ForeColor = System.Drawing.Color.White;
-            this.btnSearchCustomer.Location = new System.Drawing.Point(228, 30);
+            this.btnSearchCustomer.Location = new System.Drawing.Point(224, 29);
             this.btnSearchCustomer.Name = "btnSearchCustomer";
-            this.btnSearchCustomer.Size = new System.Drawing.Size(72, 30);
+            this.btnSearchCustomer.Size = new System.Drawing.Size(76, 34);
             this.btnSearchCustomer.TabIndex = 1;
-            this.btnSearchCustomer.Text = "Tìm";
+            this.btnSearchCustomer.Text = "🔍 Tìm";
             this.btnSearchCustomer.UseVisualStyleBackColor = false;
             this.btnSearchCustomer.Click += new System.EventHandler(this.btnSearchCustomer_Click);
 

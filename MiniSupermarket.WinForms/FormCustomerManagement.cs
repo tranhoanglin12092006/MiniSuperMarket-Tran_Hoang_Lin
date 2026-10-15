@@ -53,31 +53,36 @@ namespace MiniSupermarket.WinForms
             if (dgvCustomers.Columns["CustomerId"] != null)
             {
                 dgvCustomers.Columns["CustomerId"].HeaderText = "Mã KH";
-                dgvCustomers.Columns["CustomerId"].Width = 70;
+                dgvCustomers.Columns["CustomerId"].Width = 85;
+                dgvCustomers.Columns["CustomerId"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             }
             if (dgvCustomers.Columns["CustomerName"] != null)
             {
-                dgvCustomers.Columns["CustomerName"].HeaderText = "Họ và tên";
-                dgvCustomers.Columns["CustomerName"].Width = 160;
+                dgvCustomers.Columns["CustomerName"].HeaderText = "Họ và tên khách hàng";
+                dgvCustomers.Columns["CustomerName"].Width = 190;
             }
             if (dgvCustomers.Columns["PhoneNumber"] != null)
             {
                 dgvCustomers.Columns["PhoneNumber"].HeaderText = "Số điện thoại";
-                dgvCustomers.Columns["PhoneNumber"].Width = 120;
+                dgvCustomers.Columns["PhoneNumber"].Width = 130;
+                dgvCustomers.Columns["PhoneNumber"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             }
             if (dgvCustomers.Columns["MembershipRank"] != null)
             {
                 dgvCustomers.Columns["MembershipRank"].HeaderText = "Hạng thẻ";
-                dgvCustomers.Columns["MembershipRank"].Width = 100;
+                dgvCustomers.Columns["MembershipRank"].Width = 110;
+                dgvCustomers.Columns["MembershipRank"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
             }
             if (dgvCustomers.Columns["RewardPoints"] != null)
             {
                 dgvCustomers.Columns["RewardPoints"].HeaderText = "Điểm tích lũy";
-                dgvCustomers.Columns["RewardPoints"].Width = 110;
+                dgvCustomers.Columns["RewardPoints"].Width = 115;
+                dgvCustomers.Columns["RewardPoints"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             }
             if (dgvCustomers.Columns["Address"] != null)
             {
                 dgvCustomers.Columns["Address"].HeaderText = "Địa chỉ liên hệ";
+                dgvCustomers.Columns["Address"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
             }
         }
 

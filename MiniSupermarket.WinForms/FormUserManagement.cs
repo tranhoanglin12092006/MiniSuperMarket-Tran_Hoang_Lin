@@ -58,20 +58,42 @@ namespace MiniSupermarket.WinForms
         {
             if (dgvUsers.Columns.Count == 0) return;
 
-            if (dgvUsers.Columns["Id"] != null) dgvUsers.Columns["Id"].HeaderText = "Mã ID";
+            if (dgvUsers.Columns["Id"] != null)
+            {
+                dgvUsers.Columns["Id"].HeaderText = "Mã ID";
+                dgvUsers.Columns["Id"].Width = 80;
+                dgvUsers.Columns["Id"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            }
             if (dgvUsers.Columns["UserId"] != null) dgvUsers.Columns["UserId"].Visible = false;
-            if (dgvUsers.Columns["Username"] != null) dgvUsers.Columns["Username"].HeaderText = "Tên đăng nhập";
-            if (dgvUsers.Columns["FullName"] != null) dgvUsers.Columns["FullName"].HeaderText = "Họ và tên";
-            if (dgvUsers.Columns["Email"] != null) dgvUsers.Columns["Email"].HeaderText = "Email";
-            if (dgvUsers.Columns["Role"] != null) dgvUsers.Columns["Role"].HeaderText = "Vai trò";
+            if (dgvUsers.Columns["Username"] != null)
+            {
+                dgvUsers.Columns["Username"].HeaderText = "Tên đăng nhập";
+                dgvUsers.Columns["Username"].Width = 140;
+            }
+            if (dgvUsers.Columns["FullName"] != null)
+            {
+                dgvUsers.Columns["FullName"].HeaderText = "Họ và tên nhân viên";
+                dgvUsers.Columns["FullName"].Width = 180;
+            }
+            if (dgvUsers.Columns["Email"] != null)
+            {
+                dgvUsers.Columns["Email"].HeaderText = "Email";
+                dgvUsers.Columns["Email"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+            }
+            if (dgvUsers.Columns["Role"] != null)
+            {
+                dgvUsers.Columns["Role"].HeaderText = "Vai trò";
+                dgvUsers.Columns["Role"].Width = 110;
+                dgvUsers.Columns["Role"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            }
             if (dgvUsers.Columns["FunctionScope"] != null) dgvUsers.Columns["FunctionScope"].Visible = false;
             if (dgvUsers.Columns["IsActive"] != null) dgvUsers.Columns["IsActive"].Visible = false;
-            if (dgvUsers.Columns["TrạngThái"] != null) dgvUsers.Columns["TrạngThái"].HeaderText = "Trạng thái";
-
-            if (dgvUsers.Columns["Id"] != null) dgvUsers.Columns["Id"].Width = 65;
-            if (dgvUsers.Columns["Username"] != null) dgvUsers.Columns["Username"].Width = 120;
-            if (dgvUsers.Columns["Role"] != null) dgvUsers.Columns["Role"].Width = 100;
-            if (dgvUsers.Columns["TrạngThái"] != null) dgvUsers.Columns["TrạngThái"].Width = 110;
+            if (dgvUsers.Columns["TrạngThái"] != null)
+            {
+                dgvUsers.Columns["TrạngThái"].HeaderText = "Trạng thái";
+                dgvUsers.Columns["TrạngThái"].Width = 120;
+                dgvUsers.Columns["TrạngThái"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            }
         }
 
         private UserDto? GetSelectedUser()
