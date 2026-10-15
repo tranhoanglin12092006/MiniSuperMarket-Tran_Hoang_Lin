@@ -380,7 +380,7 @@ namespace MiniSupermarket.WinForms
             this.lblCustomerName.Location = new System.Drawing.Point(92, 67);
             this.lblCustomerName.Name = "lblCustomerName";
             this.lblCustomerName.Size = new System.Drawing.Size(117, 21);
-            this.lblCustomerName.Text = "Khách vãng lai";
+            this.lblCustomerName.Text = "Khách hàng vãng lai";
 
             // lblCustomerRank
             this.lblCustomerRank.AutoSize = true;

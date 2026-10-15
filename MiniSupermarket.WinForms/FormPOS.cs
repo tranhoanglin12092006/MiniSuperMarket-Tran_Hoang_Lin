@@ -234,7 +234,7 @@ namespace MiniSupermarket.WinForms
             string phone = txtCustomerPhone.Text.Trim();
             if (string.IsNullOrWhiteSpace(phone))
             {
-                lblCustomerName.Text = "Khách vãng lai";
+                lblCustomerName.Text = "Khách hàng vãng lai";
                 lblCustomerRank.Text = "Hạng: Chuẩn";
                 return;
             }
@@ -335,7 +335,7 @@ namespace MiniSupermarket.WinForms
                 UpdateCartDisplay();
                 txtCashReceived.Clear();
                 txtCustomerPhone.Clear();
-                lblCustomerName.Text = "Khách vãng lai";
+                lblCustomerName.Text = "Khách hàng vãng lai";
                 lblCustomerRank.Text = "Hạng: Chuẩn";
                 lblStatusMsg.Text = "Đã làm trống giỏ hàng.";
                 lblStatusMsg.ForeColor = Color.SlateGray;
@@ -388,7 +388,7 @@ namespace MiniSupermarket.WinForms
                     UpdateCartDisplay();
                     txtCashReceived.Clear();
                     txtCustomerPhone.Clear();
-                    lblCustomerName.Text = "Khách vãng lai";
+                    lblCustomerName.Text = "Khách hàng vãng lai";
                     lblCustomerRank.Text = "Hạng: Chuẩn";
                     lblStatusMsg.Text = "✅ Giao dịch hoàn tất! Sẵn sàng lượt mới.";
                     lblStatusMsg.ForeColor = Color.FromArgb(22, 163, 74);

@@ -129,7 +129,9 @@ namespace MiniSupermarket.Server.Controllers
                         o.OrderId,
                         o.OrderCode,
                         Time = o.CreatedDate.ToString("HH:mm:ss"),
-                        CustomerName = o.Customer != null ? o.Customer.CustomerName : "Khách lẻ",
+                        CustomerName = (o.Customer != null && !string.IsNullOrWhiteSpace(o.Customer.CustomerName) && o.Customer.CustomerName != "Khách lẻ")
+                            ? o.Customer.CustomerName 
+                            : "Khách hàng vãng lai",
                         Cashier = o.CashierUsername,
                         TotalItems = o.TotalItems,
                         FinalAmount = o.FinalAmount,

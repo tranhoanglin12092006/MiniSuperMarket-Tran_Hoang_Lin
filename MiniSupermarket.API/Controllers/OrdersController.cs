@@ -54,33 +54,55 @@ namespace MiniSupermarket.API.Controllers
 
                 // 2. Tích điểm thưởng cho khách hàng (nếu có số điện thoại)
                 Customer? customer = null;
-                int customerId = 1; // Mặc định khách hàng 1 (hoặc khách lẻ)
+                int customerId;
+                int rewardPoints = 0;
+
                 if (!string.IsNullOrWhiteSpace(request.CustomerPhone))
                 {
                     customer = await _context.Customers.FirstOrDefaultAsync(c => c.PhoneNumber == request.CustomerPhone.Trim());
-                    if (customer != null)
+                }
+
+                if (customer != null)
+                {
+                    customerId = customer.CustomerId;
+
+                    // Quy tắc: 10,000 VND = 1 điểm tích lũy
+                    rewardPoints = (int)(totalAmount / 10000m);
+                    customer.RewardPoints += rewardPoints;
+
+                    // Tự động nâng hạng theo điểm
+                    if (customer.RewardPoints >= 500)
+                        customer.MembershipRank = "Kim Cương";
+                    else if (customer.RewardPoints >= 200)
+                        customer.MembershipRank = "Vàng";
+                    else if (customer.RewardPoints >= 50)
+                        customer.MembershipRank = "Bạc";
+                }
+                else
+                {
+                    // Khách hàng không nhập số điện thoại hoặc không có tài khoản -> Ghi nhận là "Khách hàng vãng lai"
+                    var guestCustomer = await _context.Customers.FirstOrDefaultAsync(c => c.CustomerName == "Khách hàng vãng lai");
+                    if (guestCustomer == null)
                     {
-                        customerId = customer.CustomerId;
-
-                        // Quy tắc: 10,000 VND = 1 điểm tích lũy
-                        int pointsEarned = (int)(totalAmount / 10000m);
-                        customer.RewardPoints += pointsEarned;
-
-                        // Tự động nâng hạng theo điểm
-                        if (customer.RewardPoints >= 500)
-                            customer.MembershipRank = "Kim Cương";
-                        else if (customer.RewardPoints >= 200)
-                            customer.MembershipRank = "Vàng";
-                        else if (customer.RewardPoints >= 50)
-                            customer.MembershipRank = "Bạc";
+                        guestCustomer = new Customer
+                        {
+                            CustomerName = "Khách hàng vãng lai",
+                            PhoneNumber = "0000000000",
+                            MembershipRank = "Chuẩn",
+                            RewardPoints = 0,
+                            Address = "Khách mua lẻ trực tiếp tại quầy"
+                        };
+                        _context.Customers.Add(guestCustomer);
+                        await _context.SaveChangesAsync();
                     }
+                    customerId = guestCustomer.CustomerId;
+                    rewardPoints = 0; // Khách vãng lai không tích điểm
                 }
 
                 // 3. Tạo bản ghi Hóa đơn (Order)
                 string cashierUser = string.IsNullOrWhiteSpace(request.CashierUsername) ? "cashier01" : request.CashierUsername.Trim();
                 string orderCode = $"HD{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString()[..6].ToUpper()}";
                 int totalItemsCount = request.Items.Sum(x => x.Quantity);
-                int rewardPoints = (int)(totalAmount / 10000m);
 
                 var order = new Order
                 {

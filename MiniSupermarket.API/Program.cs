@@ -171,6 +171,36 @@ using (var scope = app.Services.CreateScope())
     try
     {
         dbContext.Database.Migrate();
+
+        // Đảm bảo có tài khoản "Khách hàng vãng lai" trong cơ sở dữ liệu
+        var guestCustomer = dbContext.Customers.FirstOrDefault(c => c.CustomerName == "Khách hàng vãng lai");
+        if (guestCustomer == null)
+        {
+            guestCustomer = new MiniSupermarket.API.Models.Customer
+            {
+                CustomerName = "Khách hàng vãng lai",
+                PhoneNumber = "0000000000",
+                MembershipRank = "Chuẩn",
+                RewardPoints = 0,
+                Address = "Khách mua lẻ trực tiếp tại quầy"
+            };
+            dbContext.Customers.Add(guestCustomer);
+            dbContext.SaveChanges();
+        }
+
+        // Cập nhật lại các hóa đơn thử nghiệm hôm nay bị gán nhầm vào khách hàng ID 1 do chưa nhập SĐT
+        var mistaggedOrders = dbContext.Orders
+            .Where(o => o.CustomerId == 1 && o.CreatedDate >= DateTime.Today)
+            .ToList();
+        if (mistaggedOrders.Any())
+        {
+            foreach (var ord in mistaggedOrders)
+            {
+                ord.CustomerId = guestCustomer.CustomerId;
+                ord.RewardPoints = 0;
+            }
+            dbContext.SaveChanges();
+        }
     }
     catch (Exception ex)
     {
