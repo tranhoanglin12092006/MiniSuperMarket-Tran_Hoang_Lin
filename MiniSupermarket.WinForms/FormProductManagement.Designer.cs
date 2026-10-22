@@ -12,6 +12,10 @@ namespace MiniSupermarket.WinForms
         private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.Button btnLoad;
         private System.Windows.Forms.DataGridView dgvProducts;
+        private System.Windows.Forms.Panel pnlPaging;
+        private System.Windows.Forms.Button btnPrev;
+        private System.Windows.Forms.Label lblPaging;
+        private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.Panel pnlRightCard;
         private System.Windows.Forms.Label lblCardHeader;
         private System.Windows.Forms.Label lblIdTitle;
@@ -49,6 +53,10 @@ namespace MiniSupermarket.WinForms
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.pnlMainContainer = new System.Windows.Forms.Panel();
             this.dgvProducts = new System.Windows.Forms.DataGridView();
+            this.pnlPaging = new System.Windows.Forms.Panel();
+            this.btnPrev = new System.Windows.Forms.Button();
+            this.lblPaging = new System.Windows.Forms.Label();
+            this.btnNext = new System.Windows.Forms.Button();
             this.pnlRightCard = new System.Windows.Forms.Panel();
             this.lblNotification = new System.Windows.Forms.Label();
             this.btnClear = new System.Windows.Forms.Button();
@@ -79,6 +87,7 @@ namespace MiniSupermarket.WinForms
             this.pnlRightCard.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudStock)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPrice)).BeginInit();
+            this.pnlPaging.SuspendLayout();
             this.pnlTopFilter.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -86,6 +95,7 @@ namespace MiniSupermarket.WinForms
             // 
             this.pnlMainContainer.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(250)))), ((int)(((byte)(252)))));
             this.pnlMainContainer.Controls.Add(this.dgvProducts);
+            this.pnlMainContainer.Controls.Add(this.pnlPaging);
             this.pnlMainContainer.Controls.Add(this.pnlRightCard);
             this.pnlMainContainer.Controls.Add(this.pnlTopFilter);
             this.pnlMainContainer.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -139,6 +149,62 @@ namespace MiniSupermarket.WinForms
             this.dgvProducts.Size = new System.Drawing.Size(682, 601);
             this.dgvProducts.TabIndex = 2;
             this.dgvProducts.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvProducts_CellClick);
+            // 
+            // pnlPaging (Buổi 6: Thanh điều hướng phân trang)
+            // 
+            this.pnlPaging.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(248)))), ((int)(((byte)(250)))), ((int)(((byte)(252)))));
+            this.pnlPaging.Controls.Add(this.btnPrev);
+            this.pnlPaging.Controls.Add(this.lblPaging);
+            this.pnlPaging.Controls.Add(this.btnNext);
+            this.pnlPaging.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.pnlPaging.Location = new System.Drawing.Point(16, 630);
+            this.pnlPaging.Name = "pnlPaging";
+            this.pnlPaging.Padding = new System.Windows.Forms.Padding(0, 6, 0, 0);
+            this.pnlPaging.Size = new System.Drawing.Size(682, 47);
+            this.pnlPaging.TabIndex = 3;
+            // 
+            // btnPrev
+            // 
+            this.btnPrev.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(245)))), ((int)(((byte)(249)))));
+            this.btnPrev.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnPrev.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
+            this.btnPrev.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnPrev.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnPrev.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
+            this.btnPrev.Location = new System.Drawing.Point(0, 7);
+            this.btnPrev.Name = "btnPrev";
+            this.btnPrev.Size = new System.Drawing.Size(130, 34);
+            this.btnPrev.TabIndex = 0;
+            this.btnPrev.Text = "<< Trang trước";
+            this.btnPrev.UseVisualStyleBackColor = false;
+            this.btnPrev.Click += new System.EventHandler(this.btnPrev_Click);
+            // 
+            // lblPaging
+            // 
+            this.lblPaging.AutoSize = true;
+            this.lblPaging.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Bold);
+            this.lblPaging.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
+            this.lblPaging.Location = new System.Drawing.Point(142, 13);
+            this.lblPaging.Name = "lblPaging";
+            this.lblPaging.Size = new System.Drawing.Size(185, 21);
+            this.lblPaging.TabIndex = 1;
+            this.lblPaging.Text = "Trang 1 / 1 (Tổng: 0 SP)";
+            // 
+            // btnNext
+            // 
+            this.btnNext.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(241)))), ((int)(((byte)(245)))), ((int)(((byte)(249)))));
+            this.btnNext.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnNext.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(((int)(((byte)(203)))), ((int)(((byte)(213)))), ((int)(((byte)(225)))));
+            this.btnNext.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnNext.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Bold);
+            this.btnNext.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(30)))), ((int)(((byte)(41)))), ((int)(((byte)(59)))));
+            this.btnNext.Location = new System.Drawing.Point(340, 7);
+            this.btnNext.Name = "btnNext";
+            this.btnNext.Size = new System.Drawing.Size(130, 34);
+            this.btnNext.TabIndex = 2;
+            this.btnNext.Text = "Trang sau >>";
+            this.btnNext.UseVisualStyleBackColor = false;
+            this.btnNext.Click += new System.EventHandler(this.btnNext_Click);
             // 
             // pnlRightCard
             // 
@@ -486,6 +552,8 @@ namespace MiniSupermarket.WinForms
             this.pnlRightCard.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.nudStock)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.nudPrice)).EndInit();
+            this.pnlPaging.ResumeLayout(false);
+            this.pnlPaging.PerformLayout();
             this.pnlTopFilter.ResumeLayout(false);
             this.pnlTopFilter.PerformLayout();
             this.ResumeLayout(false);

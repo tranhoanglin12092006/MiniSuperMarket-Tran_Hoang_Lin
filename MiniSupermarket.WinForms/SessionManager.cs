@@ -28,6 +28,18 @@ namespace MiniSupermarket.WinForms
         // Cung cấp thuộc tính Client để tương thích với các form hiện tại
         public static HttpClient Client => _client;
 
+        // Phương thức cập nhật Bearer Token sau khi đăng nhập thành công (Buổi 6)
+        public static void AttachToken(string token)
+        {
+            SessionManager.JwtToken = token;
+            _client.DefaultRequestHeaders.Authorization = null; // Xóa token cũ
+            if (!string.IsNullOrEmpty(token))
+            {
+                _client.DefaultRequestHeaders.Authorization =
+                    new AuthenticationHeaderValue("Bearer", token);
+            }
+        }
+
         // Hàm tự động nạp Token vào HttpClient trước khi gọi API
         public static void SetupHeaderToken()
         {

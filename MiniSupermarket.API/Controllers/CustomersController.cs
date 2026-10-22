@@ -37,6 +37,68 @@ namespace MiniSupermarket.API.Controllers
 
 
         // =========================================================
+        // BÀI TẬP MỞ RỘNG 6.1: GET /api/customers/paged
+        // Phân trang danh sách khách hàng thân thiết, sắp xếp giảm dần theo RewardPoints
+        // =========================================================
+        [AllowAnonymous]
+        [HttpGet("paged")]
+        public async Task<IActionResult> GetPagedCustomers(
+            [FromQuery] string? keyword,
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 5)
+        {
+            try
+            {
+                if (pageNumber < 1) pageNumber = 1;
+                if (pageSize < 1 || pageSize > 50) pageSize = 5;
+
+                var query = _context.Customers
+                    .AsNoTracking()
+                    .OrderByDescending(c => c.RewardPoints)
+                    .AsQueryable();
+
+                if (!string.IsNullOrWhiteSpace(keyword))
+                {
+                    string search = keyword.Trim().ToLower();
+                    query = query.Where(c => c.CustomerName.ToLower().Contains(search)
+                                          || c.PhoneNumber.Contains(search));
+                }
+
+                int totalItems = await query.CountAsync();
+                int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+                var items = await query
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(c => new CustomerItemDto
+                    {
+                        CustomerId = c.CustomerId,
+                        CustomerName = c.CustomerName,
+                        PhoneNumber = c.PhoneNumber,
+                        Address = c.Address,
+                        RewardPoints = c.RewardPoints,
+                        MembershipRank = c.MembershipRank
+                    })
+                    .ToListAsync();
+
+                var response = new PagedResult<CustomerItemDto>
+                {
+                    CurrentPage = pageNumber,
+                    PageSize = pageSize,
+                    TotalItems = totalItems,
+                    TotalPages = totalPages,
+                    Items = items
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi phân trang khách hàng: " + ex.Message });
+            }
+        }
+
+        // =========================================================
         // 2. GET: Lấy khách hàng theo ID
         // GET /api/customers/{id}
         // =========================================================
