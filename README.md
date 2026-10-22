@@ -107,3 +107,61 @@ Bố cục màn hình điều khiển trung tâm `FormMainShell` (Độ phân gi
   - [ ] Đăng nhập `admin01` ➔ Hiển thị đầy đủ tất cả 6 nút chức năng.
 - [ ] **Trải nghiệm người dùng (UX):** Nhấp vào nút nào thì nút đó đổi màu nổi bật (`HighlightActiveButton`), tiêu đề trên `lblTitle` đồng bộ đúng tên nghiệp vụ.
 - [ ] **Bảo mật 2 lớp (Bài tập mở rộng):** Tài khoản `cashier01` và `ware01` bị chặn hoàn toàn quyền xem báo cáo tài chính cả ở giao diện lẫn tầng sự kiện.
+
+
+---
+
+# 🛒 MiniSupermarket POS - Buổi 5: ADO.NET Nâng Cao, Stored Procedure & Giao Dịch POS Checkout
+
+> **Họ và tên:** Trần Hoàng Lin | **MSSV:** 2124110134  
+> **Chủ đề:** ADO.NET thuần, Mô hình Connected & Disconnected, Stored Procedure và Kiểm soát Giao dịch ACID với `SqlTransaction`.
+
+---
+
+## 🎯 1. Cấu Trúc Thành Phần Đã Hoàn Thiện
+
+1. **`ThucHanhAdoNet` (Console Project):**
+   - **Bài tập 1:** Đếm tổng số mặt hàng bằng `ExecuteScalar()` (`SELECT COUNT(*) FROM Products`).
+   - **Bài tập 2:** Cập nhật tồn kho an toàn bằng `ExecuteNonQuery()` và `SqlParameter` (Chống SQL Injection).
+   - **Bài tập 3:** Duyệt danh sách sản phẩm tốc độ cao bằng `SqlDataReader` (Forward-Only, hiển thị bảng chuẩn định dạng).
+   - **Tiết 4:** Kiểm chứng cơ chế Rollback của `SqlTransaction` mô phỏng lỗi gián đoạn nghiệp vụ.
+2. **`MiniSupermarket.API` (Web API Controllers & DTOs):**
+   - **`AdoProductController.cs` (Tiết 2):**
+     - `GET /api/ado-products/barcode/{barcode}`: Tra cứu mã vạch siêu tốc bằng `SqlDataReader` (Connected mode, <100ms).
+     - `GET /api/ado-products/disconnected-cache`: Tải bộ nhớ đệm ngoại tuyến bằng `DataTable` & `SqlDataAdapter` (Disconnected mode).
+     - `GET /api/ado-products/filter-stock?minStock=50`: Tra cứu danh sách sản phẩm theo ngưỡng tồn kho (Bài tập 2.1).
+     - `GET /api/ado-products/category-summary`: Tổng hợp số lượng mặt hàng theo nhóm danh mục bằng `DataTable` (Bài tập 2.2).
+   - **`ReportsController.cs` (Tiết 3):**
+     - `GET /api/reports/revenue-by-cashier`: Gọi Stored Procedure `sp_GetRevenueByCashier` qua `SqlDataReader`.
+     - `GET /api/reports/revenue-by-date-range?fromDate=...&toDate=...`: Báo cáo doanh thu theo khoảng ngày (Bài tập 3.1).
+     - `GET /api/reports/top-selling-products`: Thống kê Top 5 sản phẩm bán chạy nhất bằng Stored Procedure (Bài tập 3.2).
+   - **`CheckoutController.cs` (Tiết 5):**
+     - `POST /api/checkout`: Thực thi giao dịch thanh toán 4 bước liên hoàn bọc kín trong `SqlTransaction` (`OUTPUT INSERTED.OrderId`, kiểm tra tồn kho, lưu chi tiết, trừ kho, tích điểm, tự động `Rollback` nếu thiếu hàng).
+     - `DELETE /api/checkout/cancel/{orderId}`: Nghiệp vụ Hủy đơn hàng và hoàn trả tồn kho đa bảng an toàn (Bài tập mở rộng).
+3. **Kịch bản CSDL SQL Server (`Buoi5_Setup_MiniSupermarketDb.sql`):**
+   - Khởi tạo đầy đủ cấu trúc bảng `Categories`, `Products`, `Customers`, `Users`, `Orders`, `OrderDetails`.
+   - Nạp đủ 20 sản phẩm mẫu và 15 hóa đơn mẫu chuẩn theo giáo trình.
+   - Biên dịch 3 Stored Procedure: `sp_GetRevenueByCashier`, `sp_GetRevenueByDateRange`, `sp_GetTop5SellingProducts`.
+
+---
+
+## 🚀 2. Hướng Dẫn Chạy & Kiểm Thử
+
+### 2.1. Chạy Console Thực Hành Tiết 1 & Tiết 4
+```powershell
+# Chạy menu tương tác
+dotnet run --project ThucHanhAdoNet
+
+# Hoặc chạy trực tiếp tất cả 4 bài tập
+dotnet run --project ThucHanhAdoNet -- 5
+```
+
+### 2.2. Chạy Web API và Kiểm Thử Swagger UI
+```powershell
+dotnet run --project MiniSupermarket.API
+```
+Truy cập Swagger tại `http://localhost:5150/swagger` hoặc `https://localhost:7167/swagger` để kiểm thử:
+- Nhóm `AdoProduct`: Quét mã `893456789001` (200 OK) hoặc `999999999999` (404 Not Found).
+- Nhóm `Reports`: Gọi `/api/reports/revenue-by-cashier` (Đủ 5 nhân viên thu ngân, doanh thu 4,822,000 đ).
+- Nhóm `Checkout`: Gọi `POST /api/checkout` (Kịch bản thành công và kịch bản Rollback khi mua quá tồn kho).
+- Nhóm `Checkout`: Gọi `DELETE /api/checkout/cancel/{orderId}` (Hủy đơn và hoàn tồn kho).

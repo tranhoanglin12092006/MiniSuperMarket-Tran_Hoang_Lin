@@ -19,13 +19,22 @@ var builder = WebApplication.CreateBuilder(args);
 //    options.UseSqlServer(connectionString));
 
 var connectionString =
-    builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? "Server=localhost;Database=MiniSupermarketDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True";
 
-builder.Services.AddDbContext<SupermarketDbContext>(options =>
-    options.UseMySql(
-        connectionString,
-        ServerVersion.AutoDetect(connectionString)
-    ));
+if (!string.IsNullOrEmpty(connectionString) && (connectionString.Contains("Port=3306") || connectionString.Contains("User=") || connectionString.Contains("uid=")))
+{
+    builder.Services.AddDbContext<SupermarketDbContext>(options =>
+        options.UseMySql(
+            connectionString,
+            ServerVersion.AutoDetect(connectionString)
+        ));
+}
+else
+{
+    builder.Services.AddDbContext<SupermarketDbContext>(options =>
+        options.UseSqlServer(connectionString));
+}
 
 // =========================================================
 // 2. JWT AUTHENTICATION
