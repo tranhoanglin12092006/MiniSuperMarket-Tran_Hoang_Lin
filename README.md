@@ -1,225 +1,256 @@
-# 🛒 MiniSupermarket POS - Buổi 5: ADO.NET Nâng Cao, Stored Procedure & Giao Dịch POS Checkout
+# 🛒 MiniSupermarket POS - Buổi 6: EF Core Nâng Cao, Phân Trang LINQ & Tích Hợp Client - Server
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Buổi_5-ADO.NET_Nâng_Cao-FF5722?style=for-the-badge&logo=databricks&logoColor=white" alt="Buổi 5" />
+  <img src="https://img.shields.io/badge/Buổi_6-EF_Core_Nâng_Cao-0078D7?style=for-the-badge&logo=dotnet&logoColor=white" alt="Buổi 6" />
+  <img src="https://img.shields.io/badge/Server--side-Pagination_LINQ-10B981?style=for-the-badge&logo=databricks&logoColor=white" alt="Pagination" />
   <img src="https://img.shields.io/badge/.NET-8.0-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt=".NET 8" />
   <img src="https://img.shields.io/badge/C%23-239120?style=for-the-badge&logo=c-sharp&logoColor=white" alt="C#" />
-  <img src="https://img.shields.io/badge/MySQL-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL" />
   <img src="https://img.shields.io/badge/Windows_Forms-0078D7?style=for-the-badge&logo=windows&logoColor=white" alt="WinForms" />
   <img src="https://img.shields.io/badge/ASP.NET_Core_WebAPI-512BD4?style=for-the-badge&logo=dotnet&logoColor=white" alt="Web API" />
-  <img src="https://img.shields.io/badge/Swagger-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" />
+  <img src="https://img.shields.io/badge/JWT-Bearer_Auth-FF5722?style=for-the-badge&logo=jsonwebtokens&logoColor=white" alt="JWT" />
+  <img src="https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black" alt="Swagger" />
 </p>
 
-> **Hệ thống Quản lý Bán lẻ & Tồn kho Siêu thị Mini (MiniSupermarket POS) - Buổi 5**  
-> Ứng dụng tích hợp đa nền tảng gồm **ASP.NET Core Web API**, **Windows Forms Desktop App (Single-Form Shell)** và **Console ADO.NET Benchmarking**, tập trung vào **ADO.NET thuần (Connected/Disconnected)**, **Stored Procedure** và **Kiểm soát giao dịch ACID POS Checkout**.
+> **Hệ thống Quản lý Bán lẻ & Tồn kho Siêu thị Mini (MiniSupermarket)**  
+> **Mã môn học:** 229162 – Lập trình Ứng dụng | **Thời lượng:** 5 tiết thực hành phòng máy  
+> Dự án tích hợp hoàn chỉnh giữa **ASP.NET Core Web API (Backend)** và **Windows Forms Desktop Client**, áp dụng **Eager Loading**, **Phân trang LINQ Server-side**, **Tìm kiếm gần đúng**, kết nối an toàn qua **HttpClient** tập trung và **JWT Bearer Token**.
 
 ---
 
-## 👨‍💻 Thông Tin Tác Giả & Đồ Án
-* **Sinh viên thực hiện:** Trần Hoàng Lin
+## 👨‍💻 Thông Tin Sinh Viên & Học Phần
+* **Họ và tên sinh viên:** Trần Hoàng Lin
 * **Mã số sinh viên (MSSV):** `2124110134`
-* **Môn học / Chuyên đề:** Lập trình C# / .NET Nâng cao
-* **Phiên bản:** v2.0 (Cập nhật Kiến trúc Single-Form Shell, RBAC & ADO.NET Nâng cao)
+* **Môn học:** Lập trình Ứng dụng
+* **Mã môn học:** `229162`
+* **Bài thực hành:** Buổi 6 - Entity Framework Core Nâng Cao, Phân Trang LINQ & Tích Hợp Toàn Diện Hệ Thống POS Client - Server
 
 ---
 
-## 🏛 Cấu Trúc Solution (`MiniSuperMarket-Tran_Hoang_Lin.sln`)
+## 🏛 Cấu Trúc Solution Toàn Diện (`MiniSuperMarket-Tran_Hoang_Lin.sln`)
 
-Solution được thiết kế theo mô hình phân tầng hướng dịch vụ (Service-Oriented Tiered Architecture):
+Solution gồm **3 Project** phân tách rõ rệt theo mô hình Client-Server hướng dịch vụ:
 
 ```text
 MiniSuperMarket-Tran_Hoang_Lin/
-├── 📁 MiniSupermarket.API/             # Backend RESTful Web API (.NET 8)
-│   ├── 📁 Controllers/                # API Endpoints (EF Core & ADO.NET thuần)
-│   │   ├── AdoProductController.cs    # Quét mã vạch (<100ms) & Disconnected Cache (DataTable)
-│   │   ├── CheckoutController.cs      # POS Checkout đa bảng bọc kín trong DbTransaction
-│   │   ├── ReportsController.cs       # Báo cáo Stored Procedure (Thu ngân, Top SP, Doanh thu)
-│   │   ├── AuthController.cs          # Xác thực JWT Token & Kiểm tra mật khẩu BCrypt
-│   │   ├── ProductsController.cs      # CRUD Sản phẩm qua Entity Framework Core
-│   │   ├── CategoriesController.cs    # Quản lý Danh mục hàng hóa
-│   │   ├── CustomersController.cs     # Quản lý Khách hàng & Tích điểm thành viên
-│   │   ├── UsersController.cs         # Quản lý Nhân viên & Phân quyền hệ thống
-│   │   └── OrdersController.cs        # Lịch sử đơn hàng & Hóa đơn
-│   ├── 📁 Data/                       # Ngữ cảnh dữ liệu & Bộ hỗ trợ kết nối
-│   │   ├── AdoDbHelper.cs             # Helper kết nối CSDL linh hoạt (MySQL / SQL Server)
-│   │   └── SupermarketDbContext.cs    # EF Core DbContext với Fluent API cấu hình quan hệ
-│   ├── 📁 Models/                     # DTOs, Entities & Enums dữ liệu
-│   └── appsettings.json               # Chuỗi kết nối CSDL & Cấu hình JWT
+├── 📁 MiniSupermarket.API/                   # [BACKEND] ASP.NET Core Web API (.NET 8)
+│   ├── 📁 Controllers/                      # Bộ điều khiển RESTful API
+│   │   ├── ProductsController.cs            # ★ API Phân trang GET /api/products/paged & CRUD EF Core
+│   │   ├── CustomersController.cs           # ★ Bài 6.1: Phân trang khách hàng theo điểm thưởng
+│   │   ├── CategoriesController.cs          # Quản lý danh mục nhóm hàng hóa
+│   │   ├── CheckoutController.cs            # POS Checkout bọc ACID DbTransaction
+│   │   ├── AdoProductController.cs          # Tra cứu mã vạch & Cache DataTable thuần ADO.NET
+│   │   ├── ReportsController.cs             # Báo cáo Stored Procedure (Doanh thu thu ngân)
+│   │   ├── AuthController.cs                # Xác thực đăng nhập & Cấp phát JWT Bearer Token
+│   │   ├── UsersController.cs               # Quản trị người dùng & Phân quyền RBAC
+│   │   └── OrdersController.cs              # Quản lý hóa đơn & lịch sử đơn hàng
+│   ├── 📁 Data/                             # Ngữ cảnh dữ liệu CSDL
+│   │   ├── SupermarketDbContext.cs          # EF Core DbContext, Fluent API & Eager Loading
+│   │   └── AdoDbHelper.cs                   # Helper mở kết nối ADO.NET đa nền tảng
+│   ├── 📁 Models/                           # Thực thể & Data Transfer Objects (DTO)
+│   │   ├── PagedResponseDto.cs              # ★ DTO Generic PagedResult<T>, ProductItemDto, CustomerItemDto
+│   │   ├── Product.cs                       # Entity Sản phẩm (Barcode, Price, StockQuantity...)
+│   │   ├── Category.cs                      # Entity Nhóm hàng (CategoryName...)
+│   │   ├── Customer.cs                      # Entity Khách hàng (RewardPoints, MembershipRank...)
+│   │   ├── Order.cs & OrderDetail.cs        # Entity Hóa đơn & Chi tiết hóa đơn
+│   │   ├── User.cs & Role.cs                # Entity Tài khoản & Vai trò người dùng
+│   │   └── CheckoutDtos.cs                  # DTO Thanh toán giỏ hàng POS
+│   ├── 📁 Migrations/                       # Lịch sử lược đồ CSDL Code-First
+│   ├── appsettings.json                     # Chuỗi kết nối CSDL (MySQL / SQL Server) & Khóa JWT
+│   └── Program.cs                           # Cấu hình DI, Authentication JWT, Swagger & Middleware
 │
-├── 📁 MiniSupermarket.WinForms/        # Desktop Client - Giao diện người dùng (.NET 8 WinForms)
-│   ├── FormLogin.cs                   # Màn hình Đăng nhập (Xác thực qua Web API / Session)
-│   ├── FormMainShell.cs               # Khung điều hướng duy nhất (Single-Form Architecture)
-│   ├── FormPOS.cs                     # Bàn thu ngân POS: Quét Barcode, Lưới giỏ hàng, Thanh toán
-│   ├── FormProductManagement.cs       # Quản lý kho, tồn kho, tra cứu & lọc danh mục
-│   ├── FormCategoryManagement.cs      # Quản lý danh mục ngành hàng
-│   ├── FormCustomerManagement.cs      # Quản lý thành viên & tra cứu số điện thoại
-│   ├── FormUserManagement.cs          # Quản trị tài khoản nhân viên & gán vai trò RBAC
-│   ├── FormQuickReport.cs             # Dashboard báo cáo doanh thu nhanh cho Admin
-│   └── SessionManager.cs              # Quản lý phiên làm việc & thông tin tài khoản đăng nhập
+├── 📁 MiniSupermarket.WinForms/              # [CLIENT] Desktop App Windows Forms (.NET 8)
+│   ├── 📁 Models/                           # DTOs nhận dữ liệu JSON từ API về Client
+│   │   └── ReportDto.cs                     # DTO báo cáo doanh thu
+│   ├── FormProductManagement.cs             # ★ Màn hình Quản lý Hàng hóa: Phân trang, Tìm kiếm, Lọc nhóm, CRUD
+│   ├── FormProductManagement.Designer.cs    # ★ Giao diện Form: Thanh điều hướng trang (btnPrev, lblPaging, btnNext)
+│   ├── FormPOS.cs                           # Quầy thu ngân POS: Quét Barcode phím Enter, Giỏ hàng, Tính tiền
+│   ├── FormMainShell.cs                     # Single-Form Shell Architecture: Điều hướng menu mượt mà
+│   ├── FormLogin.cs                         # Đăng nhập hệ thống, lưu JWT vào SessionManager
+│   ├── FormCategoryManagement.cs            # Quản lý nhóm hàng hóa
+│   ├── FormCustomerManagement.cs            # Quản lý danh sách khách hàng & tra cứu SĐT
+│   ├── FormUserManagement.cs                # Phân quyền nhân viên (Admin / Cashier / Warehouse)
+│   ├── FormQuickReport.cs                   # Báo cáo thống kê doanh thu ca thu ngân
+│   └── SessionManager.cs                    # ★ Quản lý phiên làm việc & ApiClientService (AttachToken JWT)
 │
-├── 📁 ThucHanhAdoNet/                  # Console App thực hành & kiểm chứng hiệu năng ADO.NET
-│   └── Program.cs                     # Menu kiểm thử: ExecuteScalar, SqlParameter, DataReader, Rollback
+├── 📁 ThucHanhAdoNet/                        # [BENCHMARK] Console App thực hành độc lập ADO.NET
+│   └── Program.cs                           # Kiểm thử hiệu năng Connected Mode & Disconnected Mode
 │
-├── 📄 Buoi5_Setup_MySql.sql           # Script khởi tạo Stored Procedure trên MySQL (XAMPP)
-├── 📄 Buoi5_Setup_MiniSupermarketDb.sql# Script khởi tạo Database & Stored Procedure trên SQL Server
-├── 📄 Huong_Dan_Chay_Va_Test_Buoi_5.docx # Tài liệu Word hướng dẫn chạy và kiểm thử chi tiết
-└── 📄 README.md                       # Tài liệu hướng dẫn dự án
+├── 📄 MiniSuperMarket-Tran_Hoang_Lin.sln    # Solution file quản lý toàn bộ 3 projects
+├── 📄 Buoi5_Setup_MySql.sql                 # Script Database & Stored Procedures MySQL
+├── 📄 Buoi5_Setup_MiniSupermarketDb.sql      # Script Database SQL Server
+└── 📄 README.md                             # Tài liệu hướng dẫn đồ án Buổi 6
 ```
 
 ---
 
-## 🌟 Tính Năng Nổi Bật
+## 🔄 Kiến Trúc Tích Hợp Client - Server (Architecture Flow)
 
-### 1. Kiến Trúc WinForms Single-Form Shell & Dynamic Child Forms
-* **Giao diện đơn khung đồng nhất:** Loại bỏ việc mở nhiều cửa sổ rời rạc (`MDI`), toàn bộ màn hình nghiệp vụ con được nhúng trực tiếp vào `panelMainContent` (`TopLevel = false`, `Dock = Fill`).
-* **Trải nghiệm mượt mà:** Tự động tô sáng tab chức năng đang chọn (`HighlightActiveButton`) và cập nhật tiêu đề trên `panelTopHeader`.
-
-### 2. Kiểm Soát Truy Cập Dựa Trên Vai Trò (Client-Side RBAC)
-Hệ thống tự động kiểm tra vai trò người dùng ngay sau khi đăng nhập để cá nhân hóa giao diện và chặn truy cập trái phép:
-* **`Admin` (Quản trị viên):** Toàn quyền truy cập tất cả chức năng (Bán hàng, Sản phẩm, Danh mục, Khách hàng, Báo cáo tài chính, Quản lý người dùng).
-* **`Cashier` (Thu ngân):** Chỉ truy cập giao diện Bán hàng (`FormPOS`) và Quản lý khách hàng (`FormCustomerManagement`).
-* **`Warehouse` (Thủ kho):** Chỉ truy cập Quản lý sản phẩm tồn kho (`FormProductManagement`) và Danh mục (`FormCategoryManagement`).
-* **Bảo vệ 2 lớp:** Kết hợp ẩn nút trên Sidebar và chặn kiểm tra logic `SessionManager.Role` ngay tại sự kiện click.
-
-### 3. Giao Dịch POS Checkout & Bảo Toàn Dữ Liệu ACID
-* **Tra cứu mã vạch siêu tốc (<100ms):** Sử dụng `SqlDataReader` / `MySqlDataReader` trong chế độ Connected Mode để phản hồi kết quả quét barcode ngay tức thì.
-* **Bộ nhớ đệm ngoại tuyến (Disconnected Mode):** Sử dụng `DataTable` và `DbDataAdapter` nạp dữ liệu danh mục/sản phẩm vào RAM giúp giảm tải cho cơ sở dữ liệu.
-* **ACID Transactions:** Giao dịch thanh toán POS 4 bước (`CheckoutController` & `ThucHanhAdoNet`):
-  1. Thêm hóa đơn mới (`INSERT INTO Orders`).
-  2. Kiểm tra tồn kho từng sản phẩm trong giỏ hàng.
-  3. Thêm chi tiết hóa đơn (`INSERT INTO OrderDetails`).
-  4. Trừ tồn kho (`UPDATE Products SET StockQuantity = StockQuantity - @Qty`) và tích điểm khách hàng.
-  5. Tự động `Rollback()` toàn phần nếu phát sinh bất kỳ lỗi thiếu hàng nào, đảm bảo tính toàn vẹn dữ liệu tuyệt đối.
-
-### 4. Báo Cáo Hiệu Năng Cao Với Stored Procedure
-Hệ thống tích hợp các thủ tục lưu trữ tối ưu sẵn trong CSDL:
-* `sp_GetRevenueByCashier`: Báo cáo tổng doanh số và số hóa đơn theo từng nhân viên thu ngân.
-* `sp_GetRevenueByDateRange`: Thống kê doanh thu theo khoảng ngày tùy chọn.
-* `sp_GetTop5SellingProducts`: Phân tích 5 mặt hàng bán chạy nhất hệ thống.
-
----
-
-## 🔐 Bảng Tài Khoản Kiểm Thử Hệ Thống
-
-| Username | Mật khẩu mặc định | Họ và tên nhân viên | Vai trò (`Role`) | Màn hình mặc định |
-| :--- | :---: | :--- | :---: | :--- |
-| `admin01` | `123456` | Nguyễn Quản Trị | **Admin** | Quản lý Danh mục hàng |
-| `admin02` | `123456` | Trần Giám Đốc | **Admin** | Quản lý Danh mục hàng |
-| `cashier01` | `123456` | Lê Thu Ngân | **Cashier** | Quầy thu ngân POS |
-| `cashier02` | `123456` | Phạm Bán Hàng | **Cashier** | Quầy thu ngân POS |
-| `cashier03` | `123456` | Hoàng Thu Ngân | **Cashier** | Quầy thu ngân POS |
-| `ware01` | `123456` | Ngô Quản Kho | **Warehouse** | Quản lý Kho sản phẩm |
-| `ware02` | `123456` | Bùi Kiểm Kê | **Warehouse** | Quản lý Kho sản phẩm |
-| `ware03` | `123456` | Dương Thủ Kho | **Warehouse** | Quản lý Kho sản phẩm |
-
-*(Mật khẩu đã được băm an toàn bằng thuật toán `BCrypt` trong cơ sở dữ liệu).*
-
----
-
-## 🛠 Yêu Cầu Cài Đặt (Prerequisites)
-
-1. **.NET SDK:** Phiên bản `.NET 8.0 SDK` trở lên.
-2. **Cơ sở dữ liệu (chọn 1 trong 2):**
-   * **MySQL (Khuyên dùng):** XAMPP / MySQL Community Server (Cổng mặc định `3306`).
-   * **SQL Server:** Microsoft SQL Server 2019/2022 hoặc LocalDB.
-3. **IDE đề xuất:** Visual Studio 2022 (v17.8 trở lên) có cài workload *.NET desktop development* và *ASP.NET and web development*, hoặc Visual Studio Code.
-
----
-
-## 🚀 Hướng Dẫn Chạy Dự Án
-
-### Bước 1: Khởi tạo Cơ sở Dữ liệu
-
-#### Trường hợp sử dụng MySQL (XAMPP):
-1. Mở **XAMPP Control Panel** và bật dịch vụ **MySQL** (Port 3306).
-2. Mở trình duyệt vào `http://localhost/phpmyadmin`.
-3. Nhập kịch bản tạo thủ tục lưu trữ:
-   * Mở file [`Buoi5_Setup_MySql.sql`](file:///d:/MiniSuperMarket-Tran_Hoang_Lin/Buoi5_Setup_MySql.sql) và thực thi trên database `tranhoanglin_minisupermarketdb`.
-
-#### Trường hợp sử dụng SQL Server:
-1. Mở SQL Server Management Studio (SSMS).
-2. Mở file [`Buoi5_Setup_MiniSupermarketDb.sql`](file:///d:/MiniSuperMarket-Tran_Hoang_Lin/Buoi5_Setup_MiniSupermarketDb.sql) và nhấn **Execute (F5)** để tạo trọn gói bảng, dữ liệu mẫu và Stored Procedures.
-
----
-
-### Bước 2: Cấu hình chuỗi kết nối (`appsettings.json`)
-
-Mở file [`MiniSupermarket.API/appsettings.json`](file:///d:/MiniSuperMarket-Tran_Hoang_Lin/MiniSupermarket.API/appsettings.json) và kiểm tra chuỗi kết nối phù hợp:
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=127.0.0.1;Port=3306;Database=tranhoanglin_minisupermarketdb;User=root;Password=;SslMode=None;CharSet=utf8mb4;"
-  }
-}
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                   WINDOWS FORMS CLIENT (.NET 8)                        │
+│  [FormProductManagement]                   [FormPOS Thu Ngân]          │
+│    - Ô tìm kiếm gần đúng (txtSearch)         - Súng quét mã vạch USB   │
+│    - ComboBox lọc nhóm (cboFilterCategory)   - Bắt phím nóng F2, F9    │
+│    - Phân trang: [<< Prev] Trang 1/3 [Next >>]                         │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ HTTP Requests (JSON + Bearer Token)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│               ApiClientService (Quản lý HttpClient tập trung)          │
+│       - Tự động đính kèm Header: Authorization: Bearer <JWT_Token>     │
+│       - Bỏ qua lỗi SSL localhost (Custom Certificate Handler)          │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ RESTful API Calls
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                BACKEND ASP.NET CORE WEB API (.NET 8)                   │
+│   GET /api/products/paged?keyword=...&categoryId=...&page=1&size=5     │
+│   GET /api/customers/paged?pageNumber=1&pageSize=5                     │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ LINQ Query với Eager Loading
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                   ENTITY FRAMEWORK CORE 8 (ORM)                        │
+│    .Include(p => p.Category)               --> Tránh lỗi N+1 Query     │
+│    .AsNoTracking()                         --> Tối ưu bộ nhớ RAM       │
+│    .Where(...)                             --> Lọc theo từ khóa & nhóm │
+│    .OrderBy(p => p.ProductId)              --> Sắp xếp ổn định         │
+│    .Skip((page - 1) * size).Take(size)     --> Phân trang ở SQL Server │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ T-SQL: OFFSET ... ROWS FETCH NEXT
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│              CƠ SỞ DỮ LIỆU (SQL Server / MySQL Community)             │
+│   - Bảng Products (15 sản phẩm mẫu đã nạp)                             │
+│   - Bảng Categories (5 nhóm hàng phân loại chuẩn)                      │
+│   - Bảng Customers (Điểm tích lũy RewardPoints)                        │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-### Bước 3: Chạy Backend Web API & Kiểm thử Swagger
+## 🎯 Chi Tiết Triển Khai Theo Từng Tiết Học (Buổi 6)
 
-Mở terminal tại thư mục gốc và chạy:
+### 📌 Tiết 1 & 2: Xây Dựng API Phân Trang LINQ & Eager Loading
+* **Tạo DTO chuẩn hóa Metadata:** Trong [PagedResponseDto.cs](file:///D:/MiniSuperMarket-Tran_Hoang_Lin/MiniSupermarket.API/Models/PagedResponseDto.cs), định nghĩa `PagedResult<T>` đóng gói dữ liệu gồm: `CurrentPage`, `PageSize`, `TotalItems`, `TotalPages`, `Items`.
+* **Tránh lỗi N+1 Query bằng Eager Loading:** Sử dụng `.Include(p => p.Category)` để tải kèm dữ liệu `CategoryName` trong cùng một truy vấn duy nhất.
+* **Tối ưu bộ nhớ:** Áp dụng `.AsNoTracking()` cho truy vấn chỉ đọc (read-only), giảm tải tài nguyên Change Tracker của EF Core.
+* **Thuật toán phân trang tầng máy chủ:**
+  $$\text{TotalPages} = \lceil \frac{\text{TotalItems}}{\text{PageSize}} \rceil$$
+  $$\text{SkipRows} = (\text{PageNumber} - 1) \times \text{PageSize}$$
+  $$\text{TakeRows} = \text{PageSize}$$
 
-```powershell
-dotnet run --project MiniSupermarket.API
-```
+### 📌 Tiết 3: Kiểm Thử Swagger UI & Đối Soát Câu Lệnh SQL Sinh Ra
+* Endpoint: `GET /api/Products/paged?pageNumber=1&pageSize=5`
+* Mệnh đề SQL T-SQL được EF Core biên dịch ngầm:
+  ```sql
+  SELECT [p].[ProductId], [p].[Barcode], [p].[ProductName], [p].[Price], 
+         [p].[StockQuantity], [p].[CategoryId], [c].[CategoryName]
+  FROM [Products] AS [p]
+  LEFT JOIN [Categories] AS [c] ON [p].[CategoryId] = [c].[CategoryId]
+  ORDER BY [p].[ProductId]
+  OFFSET 0 ROWS FETCH NEXT 5 ROWS ONLY;
+  ```
+  *(Truy xuất chính xác 5 bản ghi cần thiết, không kéo toàn bộ bảng về máy trạm, giúp ứng dụng không bị tràn RAM khi CSDL có hàng chục ngàn dòng).*
 
-Sau khi API khởi động, truy cập Swagger UI để kiểm thử:
-* **Swagger UI:** [https://localhost:7167/swagger](https://localhost:7167/swagger) hoặc [http://localhost:5150/swagger](http://localhost:5150/swagger)
-
----
-
-### Bước 4: Chạy ứng dụng WinForms Desktop
-
-Mở một cửa sổ terminal mới và khởi chạy ứng dụng WinForms:
-
-```powershell
-dotnet run --project MiniSupermarket.WinForms
-```
-
-* Đăng nhập với tài khoản `admin01` (pass: `123456`) để kiểm tra toàn bộ menu.
-* Đăng nhập với tài khoản `cashier01` (pass: `123456`) để kiểm tra màn hình POS và phân quyền.
-* Thử quét mã vạch mẫu tại POS: `893456789001` (Snack khoai tây), `893456789005` (Coca Cola).
-
----
-
-### Bước 5: Chạy ứng dụng Console ADO.NET Benchmarking
-
-Dự án Console hỗ trợ kiểm chứng trực tiếp các kỹ thuật ADO.NET cốt lõi:
-
-```powershell
-# Chạy tương tác theo menu
-dotnet run --project ThucHanhAdoNet
-
-# Hoặc chạy nhanh toàn bộ 4 bài tập thực hành
-dotnet run --project ThucHanhAdoNet -- 5
-```
-
-**Nội dung kiểm chứng:**
-* **Bài 1:** Truy vấn giá trị vô hướng bằng `ExecuteScalar()`.
-* **Bài 2:** Cập nhật tồn kho có tham số bằng `ExecuteNonQuery()` + `SqlParameter` (Chống SQL Injection).
-* **Bài 3:** Duyệt luồng dữ liệu 1 chiều siêu tốc bằng `SqlDataReader`.
-* **Thử nghiệm:** Mô phỏng lỗi gián đoạn để kiểm tra tính năng `Rollback()` tự động của Transaction.
+### 📌 Tiết 4 & 5: Kết Nối Toàn Diện Với WinForms Client
+* **Quản lý HttpClient tập trung:** Trong [SessionManager.cs](file:///D:/MiniSuperMarket-Tran_Hoang_Lin/MiniSupermarket.WinForms/SessionManager.cs), triển khai `ApiClientService.AttachToken(token)` để tự động đính kèm token vào mọi request:
+  ```csharp
+  Client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+  ```
+* **Giao diện Quản lý Hàng hóa [FormProductManagement.cs](file:///D:/MiniSuperMarket-Tran_Hoang_Lin/MiniSupermarket.WinForms/FormProductManagement.cs):**
+  * Nạp dữ liệu vào ComboBox: `cboCategory` (form chi tiết) và `cboFilterCategory` (thanh lọc).
+  * Hàm bất đồng bộ `LoadProductsPagedAsync()` tải dữ liệu hiển thị lên `dgvProducts`.
+  * Tự động vô hiệu hóa `btnPrev` khi ở Trang 1 và `btnNext` khi ở Trang cuối cùng.
+  * Hiển thị trạng thái phân trang trực quan: `Trang 1 / 3 (Tổng: 15 SP)`.
+  * Đồng bộ CRUD: Sau khi Thêm mới, Cập nhật hoặc Xóa, tự động gọi lại hàm tải trang hiện hành từ API.
 
 ---
 
-## 📡 Danh Sách API Endpoints Chính
+## 🚀 Bài Tập Thực Hành Mở Rộng Đã Hoàn Thành (Trang 14)
 
-| Phương thức | Đường dẫn Endpoint | Công nghệ xử lý | Mô tả nghiệp vụ |
-| :---: | :--- | :---: | :--- |
-| `POST` | `/api/auth/login` | EF Core + BCrypt | Đăng nhập hệ thống & cấp thông tin phiên |
-| `GET` | `/api/ado-products/barcode/{barcode}` | ADO.NET DataReader | Tra cứu sản phẩm bằng mã vạch (<100ms) |
-| `GET` | `/api/ado-products/disconnected-cache`| ADO.NET DataTable | Tải dữ liệu đệm ngoại tuyến (Disconnected Mode) |
-| `GET` | `/api/ado-products/filter-stock` | ADO.NET DataAdapter | Lọc danh sách sản phẩm theo ngưỡng tồn kho |
-| `GET` | `/api/ado-products/category-summary` | ADO.NET DataTable | Thống kê số lượng mặt hàng theo danh mục |
-| `GET` | `/api/reports/revenue-by-cashier` | Stored Procedure | Báo cáo doanh số theo từng nhân viên thu ngân |
-| `GET` | `/api/reports/revenue-by-date-range` | Stored Procedure | Báo cáo doanh thu theo khoảng thời gian |
-| `GET` | `/api/reports/top-selling-products` | Stored Procedure | Thống kê Top 5 sản phẩm bán chạy nhất |
-| `POST` | `/api/checkout` | ADO.NET DbTransaction | Giao dịch POS Checkout đa bảng an toàn |
-| `DELETE`| `/api/checkout/cancel/{orderId}` | ADO.NET DbTransaction | Hủy đơn hàng và hoàn trả tồn kho tự động |
+### 1. Bài tập 6.1: Phân trang Khách hàng thân thiết (`Customers`)
+* **Endpoint:** `GET /api/customers/paged?keyword=...&pageNumber=1&pageSize=5`
+* **Vị trí code:** [CustomersController.cs](file:///D:/MiniSuperMarket-Tran_Hoang_Lin/MiniSupermarket.API/Controllers/CustomersController.cs)
+* **Xử lý LINQ:** Sắp xếp giảm dần theo điểm thưởng `RewardPoints` để ưu tiên khách hàng VIP:
+  ```csharp
+  var query = _context.Customers
+      .AsNoTracking()
+      .OrderByDescending(c => c.RewardPoints)
+      .AsQueryable();
+  ```
+
+### 2. Bài tập 6.2: Bộ lọc Sản phẩm theo Nhóm hàng (ComboBox Filter trên WinForms)
+* **Backend:** Tiếp nhận thêm tham số `int? categoryId` trong Action `GetPagedProducts`.
+* **Frontend WinForms:** Tích hợp sự kiện `cboFilterCategory_SelectedIndexChanged` và phím `Enter` trên ô tìm kiếm, tự động đặt `_currentPage = 1` và gọi lại API lọc theo danh mục đã chọn.
 
 ---
 
-## 📜 Giấy Phép & Bản Quyền
-Dự án được xây dựng phục vụ mục đích học tập và nghiên cứu trong khuôn khổ môn học Lập trình .NET.  
-Mọi đóng góp và mã nguồn được chia sẻ theo giấy phép [MIT License](LICENSE).
+## 📋 Bảng Đối Soát Rubric Nghiệm Thu (Trang 14 PDF)
+
+| Tiêu chí | Nội dung nghiệm thu | Kết quả thực tế | Trạng thái |
+| :---: | :--- | :--- | :---: |
+| **Tiêu chí 1** | **Backend Paging:** Gọi `GET /api/products/paged?pageNumber=1&pageSize=5` trên Swagger trả về HTTP 200 OK kèm Metadata (`CurrentPage`, `TotalItems`, `TotalPages`). | Trả về `200 OK`, `totalItems: 15`, `totalPages: 3`, `pageSize: 5`. | ✅ **ĐẠT 100%** |
+| **Tiêu chí 2** | **Eager Loading:** Dữ liệu trả về có chứa trường `categoryName` (tên nhóm hàng) không bị null. | `.Include(p => p.Category)` trả về đầy đủ tên nhóm hàng. | ✅ **ĐẠT 100%** |
+| **Tiêu chí 3** | **Tìm kiếm:** Nhập từ khóa tìm kiếm (ví dụ: `Coca`) lọc đúng kết quả và tự động tính lại tổng số trang. | Lọc theo `ProductName` và `Barcode` qua `.Contains()`, tự động tính lại `totalPages`. | ✅ **ĐẠT 100%** |
+| **Tiêu chí 4** | **WinForms Paging:** Bấm nút `<< Trang trước` và `Trang sau >>` mượt mà, không bị treo ứng dụng. | Xử lý hoàn toàn bằng `async/await`, `lblPaging` và trạng thái `Enabled` của nút cập nhật tức thì. | ✅ **ĐẠT 100%** |
+| **Tiêu chí 5** | **CRUD Hoàn chỉnh:** Thao tác Thêm, Sửa, Xóa từ WinForms cập nhật trực tiếp xuống CSDL. | Gọi API POST, PUT, DELETE đồng bộ và reload trang tự động. | ✅ **ĐẠT 100%** |
+| **Mở rộng 6.1** | Phân trang danh sách khách hàng thân thiết theo `RewardPoints` giảm dần. | Đã viết `GET /api/customers/paged` kèm tìm kiếm theo tên / số điện thoại. | ✅ **ĐẠT 100%** |
+| **Mở rộng 6.2** | Bổ sung bộ lọc Sản phẩm theo Nhóm hàng (ComboBox Filter). | Đã tích hợp `cboFilterCategory` trên WinForms và `categoryId` trên API. | ✅ **ĐẠT 100%** |
+
+---
+
+## 📦 Dữ Liệu Mẫu Kiểm Thử (15 Sản Phẩm Phân Nhóm)
+
+Hệ thống đã có sẵn 15 sản phẩm mẫu đối soát trực tiếp từ CSDL:
+
+| ID | Mã vạch | Tên sản phẩm | Đơn giá | Tồn kho | Mã nhóm | Tên nhóm hàng |
+| :-: | :---: | :--- | :-: | :-: | :-: | :--- |
+| **1** | `893456789001` | Snack Khoai Tây O'Star Gói 60g | 12,500 đ | 150 | 1 | Bánh kẹo & Đồ ăn vặt |
+| **2** | `893456789002` | Bánh Quy Bơ Danisa Hộp Thiếc 454g | 135,000 đ | 40 | 1 | Bánh kẹo & Đồ ăn vặt |
+| **3** | `893456789003` | Kẹo Dẻo Chupa Chups Trái Cây 90g | 15,000 đ | 120 | 1 | Bánh kẹo & Đồ ăn vặt |
+| **4** | `893456789004` | Bánh Chocopie Orion Hộp 12 Cái | 54,000 đ | 60 | 1 | Bánh kẹo & Đồ ăn vặt |
+| **5** | `893456789005` | Nước Ngọt Coca Cola Lon 320ml | 10,000 đ | 320 | 2 | Nước giải khát & Trà |
+| **6** | `893456789006` | Nước Khoáng Lavie Chai 500ml | 6,000 đ | 200 | 2 | Nước giải khát & Trà |
+| **7** | `893456789007` | Trà Xanh Không Độ Chai 455ml | 11,000 đ | 180 | 2 | Nước giải khát & Trà |
+| **8** | `893456789008` | Nước Tăng Lực Red Bull Lon 250ml | 14,500 đ | 150 | 2 | Nước giải khát & Trà |
+| **9** | `893456789009` | Sữa Tươi Tiệt Trùng Vinamilk 1L | 34,500 đ | 85 | 3 | Sữa & Sản phẩm từ sữa |
+| **10** | `893456789010` | Phô Mai Con Bò Cười Hộp 8 Miếng | 39,000 đ | 60 | 3 | Sữa & Sản phẩm từ sữa |
+| **11** | `893456789011` | Sữa Chua Vinamilk Có Đường Lốc 4 | 28,000 đ | 95 | 3 | Sữa & Sản phẩm từ sữa |
+| **12** | `893456789012` | Sữa Đặc Có Đường Ông Thọ Lon 380g | 26,000 đ | 110 | 3 | Sữa & Sản phẩm từ sữa |
+| **13** | `893456789013` | Mì Tôm Hảo Hảo Chua Cay Gói 75g | 4,500 đ | 500 | 4 | Mì gói & Ăn liền |
+| **14** | `893456789014` | Phở Bò Đệ Nhất Gói 68g | 8,500 đ | 140 | 4 | Mì gói & Ăn liền |
+| **15** | `893456789015` | Dầu Ăn Simply Nguyên Chất Can 2L | 125,000 đ | 45 | 5 | Gia vị & Dầu ăn |
+
+---
+
+## 🛠 Hướng Dẫn Cài Đặt & Chạy Kiểm Thử
+
+### Bước 1: Khởi động Backend Web API
+1. Mở Visual Studio, đặt **`MiniSupermarket.API`** làm Startup Project (hoặc dùng lệnh Terminal):
+   ```bash
+   dotnet run --project MiniSupermarket.API
+   ```
+2. Mở trình duyệt truy cập: `https://localhost:7167/swagger`
+3. Tìm đến mục **`GET /api/Products/paged`**, bấm **Try it out**:
+   * Để trống ô `keyword` và `categoryId`.
+   * Nhập `pageNumber: 1`, `pageSize: 5`.
+   * Bấm **Execute** -> Nhận kết quả `200 OK` với 5 sản phẩm đầu tiên và `totalItems: 15`.
+
+### Bước 2: Khởi động WinForms Desktop Client
+1. Đặt **`MiniSupermarket.WinForms`** làm Startup Project (hoặc chạy qua Terminal):
+   ```bash
+   dotnet run --project MiniSupermarket.WinForms
+   ```
+2. Đăng nhập tài khoản kiểm thử:
+   * **Username:** `admin01` (hoặc `ware01`)
+   * **Password:** `123456`
+3. Nhấp chọn menu **Quản lý sản phẩm**:
+   * Kiểm tra lưới hiển thị đúng 5 sản phẩm của trang 1.
+   * Nhấp nút **`Trang sau >>`** để chuyển mượt sang trang 2 và trang 3.
+   * Thử chọn lọc nhóm **"Nước giải khát & Trà"** từ ComboBox hoặc gõ từ khóa `Coca` để xem dữ liệu cập nhật theo thời gian thực.
+
+---
+
+> [!NOTE]
+> Dự án được xây dựng và kiểm nghiệm tương thích hoàn hảo trên nền tảng **.NET 8.0 SDK**, **C# 12**, **Entity Framework Core 8**, **Visual Studio 2022** và **Windows Forms**.
