@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -9,16 +10,45 @@ namespace MiniSupermarket.WinForms
     public partial class FormCustomerManagement : Form
     {
         private const string endpoint = "customers";
+        private List<CustomerDto> _allCustomers = new();
+        private List<CustomerDto> _displayedCustomers = new();
+        private bool _isDataLoaded = false;
 
         public FormCustomerManagement()
         {
             InitializeComponent();
             if (cboMembershipRank.Items.Count > 0) cboMembershipRank.SelectedIndex = 0;
+            if (cboFilterRank.Items.Count > 0) cboFilterRank.SelectedIndex = 0;
+
+            pnlTopFilter.Resize += (s, e) => RepositionExportButton();
+
+            txtSearch.KeyDown += (s, e) =>
+            {
+                if (e.KeyCode == Keys.Enter)
+                {
+                    e.Handled = true;
+                    e.SuppressKeyPress = true;
+                    btnSearch_Click(s, e);
+                }
+            };
+        }
+
+        private void RepositionExportButton()
+        {
+            if (btnExportExcel != null && btnLoad != null && pnlTopFilter != null)
+            {
+                int targetLeft = pnlTopFilter.ClientSize.Width - btnExportExcel.Width - 10;
+                btnExportExcel.Left = Math.Max(btnLoad.Right + 8, targetLeft);
+            }
         }
 
         private async void FormCustomerManagement_Load(object sender, EventArgs e)
         {
+            RepositionExportButton();
+            UI.UIStyler.StyleDataGridView(dgvCustomers);
             await LoadDataAsync();
+            _isDataLoaded = true;
+            RepositionExportButton();
         }
 
         private async Task LoadDataAsync()
@@ -31,10 +61,11 @@ namespace MiniSupermarket.WinForms
                 var customers = await ApiClientService.GetFromJsonWithAuthAsync<List<CustomerDto>>(endpoint);
                 if (customers != null)
                 {
-                    dgvCustomers.DataSource = null;
-                    dgvCustomers.DataSource = customers;
-                    ConfigureGridColumns();
-                    lblNotification.Text = $"✅ Đã tải thành công {customers.Count} khách hàng.";
+                    _allCustomers = customers;
+                    ApplyFilter();
+                    UpdateCustomerKPIs(_allCustomers);
+
+                    lblNotification.Text = $"✅ Đã tải thành công {_allCustomers.Count} khách hàng.";
                     lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
                 }
             }
@@ -46,53 +77,140 @@ namespace MiniSupermarket.WinForms
             }
         }
 
+        private void UpdateCustomerKPIs(List<CustomerDto> list)
+        {
+            int total = list.Count;
+            int vipCount = list.Count(c =>
+                !string.IsNullOrEmpty(c.MembershipRank) &&
+                (c.MembershipRank.Contains("Vàng", StringComparison.OrdinalIgnoreCase) ||
+                 c.MembershipRank.Contains("Kim cương", StringComparison.OrdinalIgnoreCase)));
+
+            long totalPoints = list.Sum(c => (long)c.RewardPoints);
+            int regularCount = total - vipCount;
+
+            lblKpiTotalCustomers.Text = $"{total:N0} Khách";
+            lblKpiVipCustomers.Text = $"{vipCount:N0} VIP";
+            lblKpiTotalPoints.Text = $"{totalPoints:N0} Điểm";
+            lblKpiRegularCustomers.Text = $"{regularCount:N0} Khách";
+        }
+
+        private void ApplyFilter()
+        {
+            string keyword = txtSearch.Text.Trim().ToLower();
+            string selectedRank = cboFilterRank.SelectedItem?.ToString() ?? "-- Tất cả hạng thẻ --";
+
+            var filtered = _allCustomers.AsEnumerable();
+
+            if (!string.IsNullOrEmpty(keyword))
+            {
+                filtered = filtered.Where(c =>
+                    (!string.IsNullOrEmpty(c.CustomerName) && c.CustomerName.ToLower().Contains(keyword)) ||
+                    (!string.IsNullOrEmpty(c.PhoneNumber) && c.PhoneNumber.Contains(keyword)) ||
+                    (!string.IsNullOrEmpty(c.Address) && c.Address.ToLower().Contains(keyword)));
+            }
+
+            if (!string.IsNullOrEmpty(selectedRank) && !selectedRank.StartsWith("--"))
+            {
+                filtered = filtered.Where(c => !string.IsNullOrEmpty(c.MembershipRank) && c.MembershipRank.Equals(selectedRank, StringComparison.OrdinalIgnoreCase));
+            }
+
+            _displayedCustomers = filtered.ToList();
+            dgvCustomers.DataSource = null;
+            dgvCustomers.DataSource = _displayedCustomers;
+            ConfigureGridColumns();
+
+            lblGridCount.Text = $"Tổng số: {_displayedCustomers.Count} / {_allCustomers.Count} khách hàng";
+        }
+
         private void ConfigureGridColumns()
         {
             if (dgvCustomers.Columns.Count == 0) return;
 
-            if (dgvCustomers.Columns["CustomerId"] != null)
+            dgvCustomers.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+
+            void SetCol(string propName, string text, int width, DataGridViewAutoSizeColumnMode autoMode = DataGridViewAutoSizeColumnMode.NotSet, DataGridViewContentAlignment align = DataGridViewContentAlignment.MiddleLeft, string? format = null, bool isBold = false)
             {
-                dgvCustomers.Columns["CustomerId"].HeaderText = "Mã KH";
-                dgvCustomers.Columns["CustomerId"].Width = 85;
-                dgvCustomers.Columns["CustomerId"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+                foreach (DataGridViewColumn col in dgvCustomers.Columns)
+                {
+                    if (col != null && ((col.DataPropertyName != null && col.DataPropertyName.Equals(propName, StringComparison.OrdinalIgnoreCase)) ||
+                        (col.Name != null && col.Name.Equals(propName, StringComparison.OrdinalIgnoreCase))))
+                    {
+                        col.HeaderText = text;
+                        col.MinimumWidth = width;
+                        col.Width = width;
+                        col.AutoSizeMode = autoMode;
+                        col.DefaultCellStyle.Alignment = align;
+                        if (!string.IsNullOrEmpty(format))
+                        {
+                            col.DefaultCellStyle.Format = format;
+                        }
+                        if (isBold)
+                        {
+                            col.DefaultCellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                        }
+                        return;
+                    }
+                }
             }
-            if (dgvCustomers.Columns["CustomerName"] != null)
+
+            SetCol("CustomerId", "Mã KH", 85, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
+            SetCol("CustomerName", "Họ và tên khách hàng", 190, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleLeft, null, true);
+            SetCol("PhoneNumber", "Số điện thoại", 130, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
+            SetCol("MembershipRank", "Hạng thẻ", 125, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
+            SetCol("RewardPoints", "Điểm tích lũy", 120, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleRight, "N0");
+            SetCol("Address", "Địa chỉ liên hệ", 200, DataGridViewAutoSizeColumnMode.Fill, DataGridViewContentAlignment.MiddleLeft);
+        }
+
+        private void dgvCustomers_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= dgvCustomers.Rows.Count || e.CellStyle == null) return;
+
+            string colName = dgvCustomers.Columns[e.ColumnIndex].Name;
+
+            if (colName == "MembershipRank" && e.Value != null)
             {
-                dgvCustomers.Columns["CustomerName"].HeaderText = "Họ và tên khách hàng";
-                dgvCustomers.Columns["CustomerName"].Width = 190;
-            }
-            if (dgvCustomers.Columns["PhoneNumber"] != null)
-            {
-                dgvCustomers.Columns["PhoneNumber"].HeaderText = "Số điện thoại";
-                dgvCustomers.Columns["PhoneNumber"].Width = 130;
-                dgvCustomers.Columns["PhoneNumber"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            }
-            if (dgvCustomers.Columns["MembershipRank"] != null)
-            {
-                dgvCustomers.Columns["MembershipRank"].HeaderText = "Hạng thẻ";
-                dgvCustomers.Columns["MembershipRank"].Width = 110;
-                dgvCustomers.Columns["MembershipRank"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            }
-            if (dgvCustomers.Columns["RewardPoints"] != null)
-            {
-                dgvCustomers.Columns["RewardPoints"].HeaderText = "Điểm tích lũy";
-                dgvCustomers.Columns["RewardPoints"].Width = 115;
-                dgvCustomers.Columns["RewardPoints"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-            }
-            if (dgvCustomers.Columns["Address"] != null)
-            {
-                dgvCustomers.Columns["Address"].HeaderText = "Địa chỉ liên hệ";
-                dgvCustomers.Columns["Address"].AutoSizeMode = DataGridViewAutoSizeColumnMode.Fill;
+                string rank = e.Value.ToString() ?? "";
+                if (rank.Contains("Kim cương", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.Value = "💎 Kim cương";
+                    e.CellStyle.ForeColor = Color.FromArgb(124, 58, 237); // Purple
+                    e.CellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+                }
+                else if (rank.Contains("Vàng", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.Value = "🥇 Vàng";
+                    e.CellStyle.ForeColor = Color.FromArgb(217, 119, 6); // Amber
+                    e.CellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+                }
+                else if (rank.Contains("Bạc", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.Value = "🥈 Bạc";
+                    e.CellStyle.ForeColor = Color.FromArgb(71, 85, 105); // Slate
+                    e.CellStyle.Font = new Font("Segoe UI", 9F, FontStyle.Bold);
+                }
+                else
+                {
+                    e.Value = "🥉 Chuẩn";
+                    e.CellStyle.ForeColor = Color.FromArgb(22, 163, 74); // Green
+                }
             }
         }
 
-        private async void btnLoad_Click(object sender, EventArgs e)
+        private async void btnLoad_Click(object? sender, EventArgs e)
         {
+            txtSearch.Clear();
+            cboFilterRank.SelectedIndex = 0;
             ClearInputs();
             await LoadDataAsync();
         }
 
-        private void dgvCustomers_CellClick(object sender, DataGridViewCellEventArgs e)
+        private void cboFilterRank_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (!_isDataLoaded) return;
+            ApplyFilter();
+        }
+
+        private void dgvCustomers_CellClick(object? sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex >= 0 && e.RowIndex < dgvCustomers.Rows.Count)
             {
@@ -103,7 +221,10 @@ namespace MiniSupermarket.WinForms
                 txtAddress.Text = row.Cells["Address"]?.Value?.ToString() ?? string.Empty;
 
                 string rank = row.Cells["MembershipRank"]?.Value?.ToString() ?? "Chuẩn";
-                cboMembershipRank.SelectedItem = rank;
+                if (rank.Contains("Kim cương")) cboMembershipRank.SelectedItem = "Kim cương";
+                else if (rank.Contains("Vàng")) cboMembershipRank.SelectedItem = "Vàng";
+                else if (rank.Contains("Bạc")) cboMembershipRank.SelectedItem = "Bạc";
+                else cboMembershipRank.SelectedItem = "Chuẩn";
 
                 if (decimal.TryParse(row.Cells["RewardPoints"]?.Value?.ToString(), out decimal pts))
                 {
@@ -115,11 +236,11 @@ namespace MiniSupermarket.WinForms
                 }
 
                 lblNotification.Text = $"Đang chọn: [{txtCustomerName.Text}] - ĐT: [{txtPhoneNumber.Text}]";
-                lblNotification.ForeColor = Color.FromArgb(30, 41, 59);
+                lblNotification.ForeColor = Color.FromArgb(16, 42, 33);
             }
         }
 
-        private async void btnAdd_Click(object sender, EventArgs e)
+        private async void btnAdd_Click(object? sender, EventArgs e)
         {
             string name = txtCustomerName.Text.Trim();
             string phone = txtPhoneNumber.Text.Trim();
@@ -166,7 +287,7 @@ namespace MiniSupermarket.WinForms
             }
         }
 
-        private async void btnUpdate_Click(object sender, EventArgs e)
+        private async void btnUpdate_Click(object? sender, EventArgs e)
         {
             if (!int.TryParse(txtCustomerId.Text, out int id) || id <= 0)
             {
@@ -216,7 +337,7 @@ namespace MiniSupermarket.WinForms
             }
         }
 
-        private async void btnDelete_Click(object sender, EventArgs e)
+        private async void btnDelete_Click(object? sender, EventArgs e)
         {
             if (!int.TryParse(txtCustomerId.Text, out int id) || id <= 0)
             {
@@ -252,31 +373,39 @@ namespace MiniSupermarket.WinForms
             }
         }
 
-        private async void btnSearch_Click(object sender, EventArgs e)
+        private void btnSearch_Click(object? sender, EventArgs e)
         {
-            string keyword = txtSearch.Text.Trim();
-            if (string.IsNullOrWhiteSpace(keyword))
+            ApplyFilter();
+        }
+
+        private void btnExportExcel_Click(object? sender, EventArgs e)
+        {
+            if (_displayedCustomers == null || _displayedCustomers.Count == 0)
             {
-                await LoadDataAsync();
+                MessageBox.Show("Không có dữ liệu khách hàng để xuất Excel!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
-            try
+            using var sfd = new SaveFileDialog
             {
-                lblNotification.Text = $"🔍 Đang tìm kiếm '{keyword}'...";
-                var searchResults = await ApiClientService.GetFromJsonWithAuthAsync<List<CustomerDto>>($"{endpoint}/search?keyword={Uri.EscapeDataString(keyword)}");
-                if (searchResults != null)
+                Filter = "Excel Workbook (*.xlsx)|*.xlsx|CSV File (*.csv)|*.csv",
+                FileName = $"Danh_Sach_Khach_Hang_{DateTime.Now:yyyyMMdd_HHmm}.xlsx",
+                Title = "Xuất danh sách khách hàng thân thiết"
+            };
+
+            if (sfd.ShowDialog() == DialogResult.OK)
+            {
+                try
                 {
-                    dgvCustomers.DataSource = null;
-                    dgvCustomers.DataSource = searchResults;
-                    ConfigureGridColumns();
-                    lblNotification.Text = $"✅ Tìm thấy {searchResults.Count} kết quả cho '{keyword}'.";
+                    ExcelExportHelper.ExportCustomers(_displayedCustomers, sfd.FileName);
+                    lblNotification.Text = $"✅ Đã xuất {_displayedCustomers.Count} khách hàng ra file Excel!";
                     lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
+                    MessageBox.Show($"Xuất danh sách {_displayedCustomers.Count} khách hàng ra file thành công!\n\nĐường dẫn:\n{sfd.FileName}", "Xuất dữ liệu thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Lỗi tìm kiếm: {ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi xuất file: " + ex.Message, "Lỗi xuất file", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
             }
         }
 
@@ -289,7 +418,7 @@ namespace MiniSupermarket.WinForms
             nudRewardPoints.Value = 0;
             if (cboMembershipRank.Items.Count > 0) cboMembershipRank.SelectedIndex = 0;
             txtSearch.Clear();
-            lblNotification.Text = "Hệ thống sẵn sàng.";
+            lblNotification.Text = "● Hệ thống sẵn sàng.";
             lblNotification.ForeColor = Color.FromArgb(71, 85, 105);
         }
     }

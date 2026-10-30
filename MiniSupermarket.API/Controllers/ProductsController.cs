@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -310,10 +311,20 @@ namespace MiniSupermarket.API.Controllers
     // Các DTO hỗ trợ nhận dữ liệu từ phía Client (WinForms)
     public class ProductCreateDto
     {
+        [Required(ErrorMessage = "Mã vạch không được để trống!")]
+        [StringLength(50, ErrorMessage = "Mã vạch không vượt quá 50 ký tự!")]
         public string Barcode { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Tên sản phẩm không được để trống!")]
+        [StringLength(150, ErrorMessage = "Tên sản phẩm không vượt quá 150 ký tự!")]
         public string ProductName { get; set; } = string.Empty;
+
+        [Range(0.01, double.MaxValue, ErrorMessage = "Giá bán sản phẩm phải lớn hơn 0!")]
         public decimal Price { get; set; }
+
+        [Range(0, int.MaxValue, ErrorMessage = "Số lượng tồn kho không được âm!")]
         public int StockQuantity { get; set; }
+
         public int CategoryId { get; set; }
     }
 

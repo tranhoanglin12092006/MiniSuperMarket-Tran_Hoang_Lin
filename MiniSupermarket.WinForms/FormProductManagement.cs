@@ -3,6 +3,7 @@
  * Mã sinh viên: 2124110134
  * Mô tả: Form Quản Lý Hàng Hóa kết nối Web API, hỗ trợ phân trang LINQ Eager Loading & CRUD hoàn chỉnh (Buổi 6)
  */
+using MiniSupermarket.WinForms.Models;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -45,13 +46,14 @@ namespace MiniSupermarket.WinForms
     public partial class FormProductManagement : Form
     {
         private int _currentPage = 1;
-        private readonly int _pageSize = 5; // Mặc định mỗi trang 5 sản phẩm theo tài liệu Buổi 6
+        private int _pageSize = 10; // Mặc định mỗi trang 10 sản phẩm cho giao diện hiện đại
         private int _totalPages = 1;
         private bool _isLoading = false;
 
         public FormProductManagement()
         {
             InitializeComponent();
+            pnlTopFilter.Resize += (s, e) => RepositionExportButton();
             txtSearchBarcode.KeyDown += (s, e) =>
             {
                 if (e.KeyCode == Keys.Enter)
@@ -63,10 +65,25 @@ namespace MiniSupermarket.WinForms
             };
         }
 
+        private void RepositionExportButton()
+        {
+            if (btnExportExcel != null && btnLoad != null && pnlTopFilter != null)
+            {
+                int targetLeft = pnlTopFilter.ClientSize.Width - btnExportExcel.Width - 10;
+                btnExportExcel.Left = Math.Max(btnLoad.Right + 8, targetLeft);
+            }
+        }
+
         private async void FormProductManagement_Load(object sender, EventArgs e)
         {
+            RepositionExportButton();
+            UI.UIStyler.StyleDataGridView(dgvProducts);
+            cboPageSize.SelectedIndex = 0; // 10 SP/trang
+
             await LoadCategoriesComboAsync(); // Nạp nhóm hàng vào ComboBox
-            await LoadProductsPagedAsync();    // Nạp bảng sản phẩm phân trang
+            await LoadProductsPagedAsync();   // Nạp bảng sản phẩm phân trang
+            RepositionExportButton();
+            await LoadInventoryKPIsAsync();   // Nạp 4 thẻ chỉ số kho hàng
         }
 
         // =========================================================================
@@ -84,7 +101,7 @@ namespace MiniSupermarket.WinForms
                     cboCategory.DisplayMember = "CategoryName";
                     cboCategory.ValueMember = "CategoryId";
 
-                    // ComboBox bộ lọc nhóm hàng ở thanh trên (Bài tập mở rộng 6.2)
+                    // ComboBox bộ lọc nhóm hàng ở thanh trên
                     var filterList = new List<CategoryComboDto>
                     {
                         new CategoryComboDto { CategoryId = 0, CategoryName = "-- Tất cả nhóm hàng --" }
@@ -94,6 +111,8 @@ namespace MiniSupermarket.WinForms
                     cboFilterCategory.DataSource = filterList;
                     cboFilterCategory.DisplayMember = "CategoryName";
                     cboFilterCategory.ValueMember = "CategoryId";
+
+                    lblKpiTotalCategories.Text = $"{categories.Count} nhóm";
                 }
             }
             catch (Exception ex)
@@ -103,7 +122,47 @@ namespace MiniSupermarket.WinForms
         }
 
         // =========================================================================
-        // 2. GỌI API PHÂN TRANG VÀ HIỂN THỊ DỮ LIỆU LÊN DATAGRIDVIEW
+        // 2. TẢI 4 THẺ KPI CHỈ SỐ KHO HÀNG TỔNG QUAN
+        // =========================================================================
+        private async Task LoadInventoryKPIsAsync()
+        {
+            try
+            {
+                // 1. Lấy dữ liệu tổng quan từ API Dashboard
+                var summary = await ApiClientService.GetFromJsonWithAuthAsync<DashboardSummaryDto>("reports/dashboard-summary");
+                if (summary != null)
+                {
+                    lblKpiLowStock.Text = $"{summary.LowStockCount} SP";
+
+                    if (summary.LowStockCount > 0)
+                    {
+                        panelKpiLowStock.BackColor = Color.FromArgb(254, 242, 242); // Red 50
+                    }
+                    else
+                    {
+                        panelKpiLowStock.BackColor = Color.White;
+                    }
+                }
+
+                // 2. Lấy toàn bộ sản phẩm để tính tổng giá trị kho hàng
+                var allResult = await ApiClientService.GetFromJsonWithAuthAsync<PagedViewResult<ProductItemViewDto>>("products/paged?pageNumber=1&pageSize=10000");
+                if (allResult != null && allResult.Items != null)
+                {
+                    int totalProducts = allResult.TotalItems;
+                    decimal totalStockValue = allResult.Items.Sum(p => p.Price * p.StockQuantity);
+
+                    lblKpiTotalProducts.Text = $"{totalProducts:N0} SP";
+                    lblKpiTotalStockValue.Text = $"{totalStockValue:N0} đ";
+                }
+            }
+            catch
+            {
+                // Fallback nếu không kết nối được KPI
+            }
+        }
+
+        // =========================================================================
+        // 3. GỌI API PHÂN TRANG VÀ HIỂN THỊ DỮ LIỆU LÊN DATAGRIDVIEW
         // =========================================================================
         private async Task LoadProductsPagedAsync()
         {
@@ -139,13 +198,26 @@ namespace MiniSupermarket.WinForms
                     ConfigureGridHeaders();
 
                     // Cập nhật nhãn phân trang
-                    lblPaging.Text = $"Trang {_currentPage} / {_totalPages} (Tổng: {result.TotalItems} SP)";
+                    lblPaging.Text = $"Trang {_currentPage} / {_totalPages} (Tổng: {result.TotalItems:N0} SP)";
+                    lblKpiTotalProducts.Text = $"{result.TotalItems:N0} SP";
 
                     // Bật/tắt nút điều hướng
                     btnPrev.Enabled = _currentPage > 1;
                     btnNext.Enabled = _currentPage < _totalPages;
 
-                    lblNotification.Text = $"✅ Đã tải trang {_currentPage}/{_totalPages} (Tổng {result.TotalItems} sản phẩm).";
+                    // Item 43: Huy hiệu & Cảnh báo tồn kho thấp (<= 10)
+                    int lowStockCount = result.Items.Count(p => p.StockQuantity <= 10);
+                    if (lowStockCount > 0)
+                    {
+                        lblLowStockBadge.Text = $"⚠️ Trang này có {lowStockCount} SP tồn kho ≤ 10!";
+                        lblLowStockBadge.Visible = true;
+                    }
+                    else
+                    {
+                        lblLowStockBadge.Visible = false;
+                    }
+
+                    lblNotification.Text = $"✅ Đã tải trang {_currentPage}/{_totalPages} (Tổng {result.TotalItems:N0} sản phẩm).";
                     lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
                 }
             }
@@ -171,8 +243,8 @@ namespace MiniSupermarket.WinForms
             {
                 foreach (DataGridViewColumn col in dgvProducts.Columns)
                 {
-                    if (col.DataPropertyName.Equals(propName, StringComparison.OrdinalIgnoreCase) ||
-                        col.Name.Equals(propName, StringComparison.OrdinalIgnoreCase))
+                    if (col != null && col.DataPropertyName != null && col.DataPropertyName.Equals(propName, StringComparison.OrdinalIgnoreCase) ||
+                        col?.Name != null && col.Name.Equals(propName, StringComparison.OrdinalIgnoreCase))
                     {
                         col.HeaderText = text;
                         col.MinimumWidth = width;
@@ -188,17 +260,17 @@ namespace MiniSupermarket.WinForms
                 }
             }
 
-            SetHeader("ProductId", "Mã SP", 85, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
-            SetHeader("Barcode", "Mã vạch", 155, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleLeft);
+            SetHeader("ProductId", "ID", 65, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
+            SetHeader("Barcode", "Mã vạch", 145, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
             SetHeader("ProductName", "Tên sản phẩm", 240, DataGridViewAutoSizeColumnMode.Fill, DataGridViewContentAlignment.MiddleLeft);
-            SetHeader("Price", "Đơn giá (VNĐ)", 135, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleRight, "N0");
-            SetHeader("StockQuantity", "Tồn kho", 95, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter, "N0");
-            SetHeader("CategoryName", "Nhóm hàng", 175, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleLeft);
+            SetHeader("Price", "Đơn giá (VNĐ)", 130, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleRight, "N0");
+            SetHeader("StockQuantity", "Tồn kho", 90, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter, "N0");
+            SetHeader("CategoryName", "Nhóm hàng", 160, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleLeft);
             SetHeader("CategoryId", "Mã nhóm", 85, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
         }
 
         // =========================================================================
-        // 3. SỰ KIỆN CHUYỂN TRANG
+        // 4. SỰ KIỆN PHÂN TRANG & THAY ĐỔI PAGE SIZE
         // =========================================================================
         private async void btnPrev_Click(object? sender, EventArgs e)
         {
@@ -218,12 +290,27 @@ namespace MiniSupermarket.WinForms
             }
         }
 
+        private async void cboPageSize_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (_isLoading) return;
+
+            _pageSize = cboPageSize.SelectedIndex switch
+            {
+                1 => 20,
+                2 => 50,
+                _ => 10
+            };
+
+            _currentPage = 1;
+            await LoadProductsPagedAsync();
+        }
+
         // =========================================================================
-        // 4. SỰ KIỆN TÌM KIẾM VÀ LỌC DANH MỤC
+        // 5. TÌM KIẾM VÀ LỌC THEO NHÓM HÀNG
         // =========================================================================
         private async void btnSearch_Click(object? sender, EventArgs e)
         {
-            _currentPage = 1; // Khi tìm kiếm từ khóa mới, luôn quay về trang 1
+            _currentPage = 1;
             await LoadProductsPagedAsync();
         }
 
@@ -231,7 +318,7 @@ namespace MiniSupermarket.WinForms
         {
             if (!_isLoading)
             {
-                _currentPage = 1; // Khi đổi nhóm hàng, luôn quay về trang 1
+                _currentPage = 1;
                 await LoadProductsPagedAsync();
             }
         }
@@ -245,10 +332,11 @@ namespace MiniSupermarket.WinForms
             }
             _currentPage = 1;
             await LoadProductsPagedAsync();
+            await LoadInventoryKPIsAsync();
         }
 
         // =========================================================================
-        // 5. CHỌN SẢN PHẨM TỪ BẢNG ĐỂ HIỂN THỊ LÊN FORM
+        // 6. CHỌN SẢN PHẨM TỪ BẢNG ĐỂ HIỂN THỊ LÊN FORM
         // =========================================================================
         private void dgvProducts_CellClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -278,7 +366,7 @@ namespace MiniSupermarket.WinForms
         }
 
         // =========================================================================
-        // 6. THÊM MỚI SẢN PHẨM QUA API
+        // 7. THÊM MỚI SẢN PHẨM QUA API
         // =========================================================================
         private async void btnAdd_Click(object sender, EventArgs e)
         {
@@ -324,6 +412,7 @@ namespace MiniSupermarket.WinForms
                     lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
                     MessageBox.Show("Thêm mới sản phẩm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await LoadProductsPagedAsync();
+                    await LoadInventoryKPIsAsync();
                     ClearInputs();
                 }
                 else
@@ -341,7 +430,7 @@ namespace MiniSupermarket.WinForms
         }
 
         // =========================================================================
-        // 7. CẬP NHẬT SẢN PHẨM QUA API
+        // 8. CẬP NHẬT SẢN PHẨM QUA API
         // =========================================================================
         private async void btnUpdate_Click(object sender, EventArgs e)
         {
@@ -385,6 +474,7 @@ namespace MiniSupermarket.WinForms
                     lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
                     MessageBox.Show("Cập nhật thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     await LoadProductsPagedAsync();
+                    await LoadInventoryKPIsAsync();
                 }
                 else
                 {
@@ -399,7 +489,7 @@ namespace MiniSupermarket.WinForms
         }
 
         // =========================================================================
-        // 8. XÓA SẢN PHẨM QUA API
+        // 9. XÓA SẢN PHẨM QUA API
         // =========================================================================
         private async void btnDelete_Click(object sender, EventArgs e)
         {
@@ -423,6 +513,7 @@ namespace MiniSupermarket.WinForms
                         lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
                         MessageBox.Show("Đã xóa sản phẩm thành công!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         await LoadProductsPagedAsync();
+                        await LoadInventoryKPIsAsync();
                         ClearInputs();
                     }
                     else
@@ -451,8 +542,84 @@ namespace MiniSupermarket.WinForms
             nudPrice.Value = nudPrice.Minimum;
             nudStock.Value = nudStock.Minimum;
             if (cboCategory.Items.Count > 0) cboCategory.SelectedIndex = 0;
-            lblNotification.Text = "Hệ thống sẵn sàng.";
+            lblNotification.Text = "● Hệ thống sẵn sàng.";
             lblNotification.ForeColor = Color.FromArgb(71, 85, 105);
+        }
+
+        // =========================================================================
+        // ITEM 43: HUY HIỆU & CẢNH BÁO HÀNG SẮP HẾT KHO (LOW-STOCK ALERT)
+        // =========================================================================
+        private void dgvProducts_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.RowIndex >= dgvProducts.Rows.Count) return;
+            var row = dgvProducts.Rows[e.RowIndex];
+            if (row == null || row.DataBoundItem is not ProductItemViewDto item) return;
+
+            var col = dgvProducts.Columns[e.ColumnIndex];
+            if (col != null && col.DataPropertyName != null)
+            {
+                if (col.DataPropertyName.Equals("StockQuantity", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (item.StockQuantity <= 10)
+                    {
+                        e.CellStyle!.BackColor = Color.FromArgb(254, 242, 242); // Red 50
+                        e.CellStyle!.ForeColor = Color.FromArgb(220, 38, 38);   // Red 600
+                        e.CellStyle!.Font = new Font(dgvProducts.Font, FontStyle.Bold);
+                    }
+                    else
+                    {
+                        e.CellStyle!.ForeColor = Color.FromArgb(22, 163, 74);   // Green 600
+                        e.CellStyle!.Font = new Font(dgvProducts.Font, FontStyle.Bold);
+                    }
+                }
+                else if (col.DataPropertyName.Equals("Price", StringComparison.OrdinalIgnoreCase))
+                {
+                    e.CellStyle!.ForeColor = Color.FromArgb(37, 99, 235);       // Tech Blue
+                    e.CellStyle!.Font = new Font(dgvProducts.Font, FontStyle.Bold);
+                }
+            }
+        }
+
+        // =========================================================================
+        // ITEM 48: XUẤT BÁO CÁO DANH MỤC & TỒN KHO RA EXCEL (ClosedXML)
+        // =========================================================================
+        private async void btnExportExcel_Click(object? sender, EventArgs e)
+        {
+            try
+            {
+                lblNotification.Text = "⏳ Đang tải toàn bộ dữ liệu để xuất file...";
+                lblNotification.ForeColor = Color.SteelBlue;
+
+                var allProducts = await ApiClientService.GetFromJsonWithAuthAsync<PagedViewResult<ProductItemViewDto>>("products/paged?pageNumber=1&pageSize=10000");
+                var listToExport = allProducts?.Items ?? (dgvProducts.DataSource as List<ProductItemViewDto>) ?? new List<ProductItemViewDto>();
+
+                if (listToExport.Count == 0)
+                {
+                    MessageBox.Show("Không có dữ liệu sản phẩm nào để xuất!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                using var sfd = new SaveFileDialog
+                {
+                    Title = "Chọn vị trí lưu tệp danh mục hàng hóa",
+                    Filter = "Tệp Excel (*.xlsx)|*.xlsx|Tệp CSV (*.csv)|*.csv",
+                    FileName = $"DanhMucSanPham_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx"
+                };
+
+                if (sfd.ShowDialog() == DialogResult.OK)
+                {
+                    ExcelExportHelper.ExportProducts(listToExport, sfd.FileName);
+                    lblNotification.Text = $"✅ Đã xuất {listToExport.Count} sản phẩm ra file thành công!";
+                    lblNotification.ForeColor = Color.FromArgb(22, 163, 74);
+                    MessageBox.Show($"Đã xuất danh mục thành công ra tệp:\n{sfd.FileName}\n\n(Tổng cộng: {listToExport.Count} mặt hàng)", "Xuất tệp thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                lblNotification.Text = "❌ Lỗi xuất file: " + ex.Message;
+                lblNotification.ForeColor = Color.Crimson;
+                MessageBox.Show("Lỗi khi xuất tệp Excel/CSV: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
     }
 }

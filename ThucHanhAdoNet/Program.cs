@@ -107,10 +107,11 @@ namespace ThucHanhAdoNet
                 Console.WriteLine("2. [Tiet 1 - Bai 2] Cap nhat ton kho an toan bang ExecuteNonQuery() & Parameter");
                 Console.WriteLine("3. [Tiet 1 - Bai 3] Duyet danh sach san pham bang DataReader");
                 Console.WriteLine("4. [Tiet 4] Mo phong dieu khien giao dich ACID bang Transaction (Test Rollback)");
-                Console.WriteLine("5. Chay tuan tu tat ca cac bai tap");
+                Console.WriteLine("5. Chay tuan tu tat ca cac bai tap (1 -> 4)");
+                Console.WriteLine("6. [Tiet 3] Khoi phuc va tao 3 Stored Procedure vao Database (Routines)");
                 Console.WriteLine("0. Thoat chuong trinh");
                 Console.WriteLine("=========================================================================");
-                Console.Write("Vui long chon bai tap muon thuc thi (0 - 5): ");
+                Console.Write("Vui long chon bai tap muon thuc thi (0 - 6): ");
 
                 string? choice = Console.ReadLine();
                 Console.WriteLine();
@@ -157,6 +158,12 @@ namespace ThucHanhAdoNet
                     ChayBaiTap3_SqlDataReader();
                     Console.WriteLine("\n-------------------------------------------------------------------------\n");
                     ChayTiet4_SqlTransaction();
+                    break;
+                case "6":
+                case "sp":
+                case "init-sp":
+                case "--sp":
+                    KhoiPhucStoredProcedures();
                     break;
                 default:
                     Console.WriteLine("Lua chon khong hop le.");
@@ -369,6 +376,174 @@ namespace ThucHanhAdoNet
                         int stockAfter = Convert.ToInt32(cmdCheck.ExecuteScalar());
                         Console.WriteLine($"-> [Doi soat] Ton kho SP 1 sau Rollback: {stockAfter} (Bang dung so luong ban dau {stockBefore})");
                     }
+                }
+            }
+        }
+
+        // =========================================================================
+        // TIET 3: Khoi phuc va tao cac Stored Procedure vao Database (MySQL / SQL Server)
+        // =========================================================================
+        public static void KhoiPhucStoredProcedures()
+        {
+            Console.WriteLine("=== KHOI PHUC & TAO STORED PROCEDURES VAO DATABASE ===");
+
+            string connStr = GetConnectionString(out bool isMySql);
+            string dbType = isMySql ? "MySQL" : "SQL Server";
+
+            using (DbConnection connection = CreateConnection(connStr, isMySql))
+            {
+                try
+                {
+                    connection.Open();
+                    Console.WriteLine($"-> Da ket noi thanh cong toi CSDL {dbType}!");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[LOI KET NOI]: {BoDau(ex.Message)}");
+                    if (isMySql)
+                    {
+                        Console.WriteLine("-> Luu y: Hay bat MySQL tren XAMPP Control Panel truoc khi chay!");
+                    }
+                    return;
+                }
+
+                if (isMySql)
+                {
+                    // Cac lenh tao Stored Procedure tren MySQL
+                    var procScripts = new (string Name, string DropSql, string CreateSql)[]
+                    {
+                        (
+                            "sp_GetRevenueByCashier",
+                            "DROP PROCEDURE IF EXISTS sp_GetRevenueByCashier;",
+                            @"CREATE PROCEDURE sp_GetRevenueByCashier()
+                            BEGIN
+                                SELECT 
+                                    CashierUsername,
+                                    COUNT(OrderId) AS TotalOrders,
+                                    SUM(FinalAmount) AS TotalRevenue,
+                                    SUM(RewardPoints) AS TotalPointsAwarded
+                                FROM orders
+                                GROUP BY CashierUsername
+                                ORDER BY TotalRevenue DESC;
+                            END;"
+                        ),
+                        (
+                            "sp_GetRevenueByDateRange",
+                            "DROP PROCEDURE IF EXISTS sp_GetRevenueByDateRange;",
+                            @"CREATE PROCEDURE sp_GetRevenueByDateRange(IN p_FromDate DATETIME, IN p_ToDate DATETIME)
+                            BEGIN
+                                SELECT 
+                                    CashierUsername,
+                                    COUNT(OrderId) AS TotalOrders,
+                                    SUM(FinalAmount) AS TotalRevenue
+                                FROM orders
+                                WHERE CreatedDate >= p_FromDate AND CreatedDate <= p_ToDate
+                                GROUP BY CashierUsername
+                                ORDER BY TotalRevenue DESC;
+                            END;"
+                        ),
+                        (
+                            "sp_GetTop5SellingProducts",
+                            "DROP PROCEDURE IF EXISTS sp_GetTop5SellingProducts;",
+                            @"CREATE PROCEDURE sp_GetTop5SellingProducts()
+                            BEGIN
+                                SELECT 
+                                    p.ProductId,
+                                    p.Barcode,
+                                    p.ProductName,
+                                    SUM(od.Quantity) AS TotalSold,
+                                    SUM(od.LineTotal) AS TotalSalesRevenue
+                                FROM orderdetails od
+                                INNER JOIN products p ON od.ProductId = p.ProductId
+                                GROUP BY p.ProductId, p.Barcode, p.ProductName
+                                ORDER BY TotalSold DESC
+                                LIMIT 5;
+                            END;"
+                        ),
+                        (
+                            "sp_GetDailyRevenueByDateRange",
+                            "DROP PROCEDURE IF EXISTS sp_GetDailyRevenueByDateRange;",
+                            @"CREATE PROCEDURE sp_GetDailyRevenueByDateRange(IN p_FromDate DATETIME, IN p_ToDate DATETIME)
+                            BEGIN
+                                SELECT 
+                                    DATE(CreatedDate) AS OrderDate,
+                                    COUNT(OrderId) AS TotalOrders,
+                                    SUM(FinalAmount) AS TotalRevenue
+                                FROM orders
+                                WHERE CreatedDate >= p_FromDate AND CreatedDate <= p_ToDate
+                                GROUP BY DATE(CreatedDate)
+                                ORDER BY OrderDate ASC;
+                            END;"
+                        )
+                    };
+
+                    int successCount = 0;
+                    foreach (var p in procScripts)
+                    {
+                        try
+                        {
+                            using (var cmdDrop = connection.CreateCommand())
+                            {
+                                cmdDrop.CommandText = p.DropSql;
+                                cmdDrop.ExecuteNonQuery();
+                            }
+
+                            using (var cmdCreate = connection.CreateCommand())
+                            {
+                                cmdCreate.CommandText = p.CreateSql;
+                                cmdCreate.ExecuteNonQuery();
+                            }
+
+                            Console.WriteLine($"[V] Da tao thanh cong: {p.Name}");
+                            successCount++;
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[X] Loi khi tao {p.Name}: {BoDau(ex.Message)}");
+                        }
+                    }
+
+                    Console.WriteLine($"\n-> KET QUA: Da khoi phuc thanh cong {successCount}/{procScripts.Length} Stored Procedure!");
+                    Console.WriteLine("-------------------------------------------------------------------------");
+
+                    // Truy van hien thi lai danh sach tu information_schema.ROUTINES
+                    Console.WriteLine("DANH SACH STORED PROCEDURES TRONG DATABASE (Routines):");
+                    Console.WriteLine(string.Format("{0,-30} | {1,-20} | {2,-20}", "TEN PROCEDURE", "LOAI", "NGAY TAO"));
+                    Console.WriteLine(new string('-', 75));
+
+                    try
+                    {
+                        using (var cmdList = connection.CreateCommand())
+                        {
+                            cmdList.CommandText = @"SELECT ROUTINE_NAME, ROUTINE_TYPE, CREATED 
+                                                   FROM information_schema.ROUTINES 
+                                                   WHERE ROUTINE_SCHEMA = DATABASE() AND ROUTINE_TYPE = 'PROCEDURE'
+                                                   ORDER BY ROUTINE_NAME;";
+                            using (var reader = cmdList.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    string name = reader.GetString(0);
+                                    string type = reader.GetString(1);
+                                    string created = reader.GetDateTime(2).ToString("yyyy-MM-dd HH:mm:ss");
+                                    Console.WriteLine(string.Format("{0,-30} | {1,-20} | {2,-20}", name, type, created));
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[LOI DOC DANH SACH]: {BoDau(ex.Message)}");
+                    }
+
+                    Console.WriteLine("-------------------------------------------------------------------------");
+                    Console.WriteLine("-> Luu y: Mo phpMyAdmin -> Chon database tranhoanglin_minisupermarketdb -> Tab 'Routines' se hien thi ngay!");
+                }
+                else
+                {
+                    // SQL Server
+                    Console.WriteLine("-> Dang khoi phuc Stored Procedure tren SQL Server...");
+                    // File Buoi5_Setup_MiniSupermarketDb.sql da co san
                 }
             }
         }

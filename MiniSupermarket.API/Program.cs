@@ -82,6 +82,19 @@ builder.Services.AddAuthorization();
 // 4. CONTROLLERS
 // =========================================================
 
+// =========================================================
+// 4.5. BẬT CORS (CHO PHÉP CLIENT GỌI VÀO API THÀNH CÔNG)
+// =========================================================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
@@ -152,6 +165,9 @@ if (app.Environment.IsDevelopment())
 // =========================================================
 
 app.UseHttpsRedirection();
+
+// Kích hoạt Middleware CORS
+app.UseCors("AllowAll");
 
 
 // =========================================================

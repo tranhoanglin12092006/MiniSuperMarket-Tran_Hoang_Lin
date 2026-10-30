@@ -8,13 +8,13 @@ namespace MiniSupermarket.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    [Authorize(Roles = "Admin,Cashier")] // Thu ngân và Admin có quyền lập hóa đơn bán hàng
     public class OrdersController : ControllerBase
     {
         private readonly SupermarketDbContext _context;
 
         public OrdersController(SupermarketDbContext context)
-        {
+        {   
             _context = context;
         }
 
@@ -22,6 +22,7 @@ namespace MiniSupermarket.API.Controllers
         [HttpPost("checkout")]
         public async Task<IActionResult> Checkout([FromBody] CheckoutRequestDto request)
         {
+            using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
                 if (request == null || request.Items == null || !request.Items.Any())
@@ -30,7 +31,7 @@ namespace MiniSupermarket.API.Controllers
                 }
 
                 // 1. Kiểm tra tồn kho và tính tổng tiền
-                decimal totalAmount = 0;
+                decimal grossAmount = 0;
                 var updatedProducts = new List<Product>();
 
                 foreach (var item in request.Items)
@@ -48,27 +49,53 @@ namespace MiniSupermarket.API.Controllers
 
                     // Trừ kho
                     product.StockQuantity -= item.Quantity;
-                    totalAmount += item.Quantity * item.UnitPrice;
+                    grossAmount += item.Quantity * item.UnitPrice;
                     updatedProducts.Add(product);
                 }
 
                 // 2. Tích điểm thưởng cho khách hàng (nếu có số điện thoại)
                 Customer? customer = null;
                 int customerId;
-                int rewardPoints = 0;
 
                 if (!string.IsNullOrWhiteSpace(request.CustomerPhone))
                 {
                     customer = await _context.Customers.FirstOrDefaultAsync(c => c.PhoneNumber == request.CustomerPhone.Trim());
                 }
 
+                // =====================================================================
+                // ĐỔI ĐIỂM THƯỞNG TRỪ TIỀN (Item 47: Loyalty Points Redemption)
+                // Cập nhật đồng thời trừ điểm trong bảng Customers và trừ tiền FinalAmount
+                // trong cùng một SqlTransaction / DbTransaction
+                // =====================================================================
+                decimal discountFromPoints = 0;
+                int pointsToRedeem = request.PointsToRedeem;
+
                 if (customer != null)
                 {
                     customerId = customer.CustomerId;
 
-                    // Quy tắc: 10,000 VND = 1 điểm tích lũy
-                    rewardPoints = (int)(totalAmount / 10000m);
-                    customer.RewardPoints += rewardPoints;
+                    if (pointsToRedeem > 0)
+                    {
+                        if (customer.RewardPoints < pointsToRedeem)
+                        {
+                            return BadRequest(new { message = $"Khách hàng không đủ điểm tích lũy! (Hiện có: {customer.RewardPoints}, yêu cầu: {pointsToRedeem})" });
+                        }
+
+                        // 1 điểm = 1.000 VNĐ
+                        discountFromPoints = pointsToRedeem * 1000m;
+                        if (discountFromPoints > grossAmount)
+                        {
+                            discountFromPoints = grossAmount;
+                        }
+
+                        // Trừ điểm thưởng của khách trong transaction
+                        customer.RewardPoints -= pointsToRedeem;
+                    }
+
+                    // Tính điểm tích lũy mới sau khi trừ tiền thanh toán
+                    decimal payableAfterDiscount = Math.Max(0, grossAmount - discountFromPoints);
+                    int earnedPoints = (int)(payableAfterDiscount / 10000m);
+                    customer.RewardPoints += earnedPoints;
 
                     // Tự động nâng hạng theo điểm
                     if (customer.RewardPoints >= 500)
@@ -96,8 +123,10 @@ namespace MiniSupermarket.API.Controllers
                         await _context.SaveChangesAsync();
                     }
                     customerId = guestCustomer.CustomerId;
-                    rewardPoints = 0; // Khách vãng lai không tích điểm
                 }
+
+                decimal finalAmount = Math.Max(0, grossAmount - discountFromPoints);
+                int rewardPointsForOrder = (int)(finalAmount / 10000m);
 
                 // 3. Tạo bản ghi Hóa đơn (Order)
                 string cashierUser = string.IsNullOrWhiteSpace(request.CashierUsername) ? "cashier01" : request.CashierUsername.Trim();
@@ -111,8 +140,8 @@ namespace MiniSupermarket.API.Controllers
                     CustomerId = customerId,
                     CashierUsername = cashierUser,
                     TotalItems = totalItemsCount,
-                    FinalAmount = totalAmount,
-                    RewardPoints = rewardPoints
+                    FinalAmount = finalAmount,
+                    RewardPoints = rewardPointsForOrder
                 };
 
                 _context.Orders.Add(order);
@@ -135,12 +164,19 @@ namespace MiniSupermarket.API.Controllers
                 // Lưu các thay đổi chi tiết và trừ kho xuống database
                 await _context.SaveChangesAsync();
 
+                // Xác nhận giao dịch trong Transaction
+                await transaction.CommitAsync();
+
                 return Ok(new
                 {
                     message = "Thanh toán thành công!",
                     orderCode = order.OrderCode,
                     orderId = order.OrderId,
-                    totalAmount = totalAmount,
+                    grossAmount = grossAmount,
+                    discountFromPoints = discountFromPoints,
+                    pointsRedeemed = pointsToRedeem,
+                    totalAmount = finalAmount,
+                    finalAmount = finalAmount,
                     itemCount = request.Items.Count,
                     customerName = customer != null ? customer.CustomerName : "Khách vãng lai",
                     rewardPoints = customer?.RewardPoints ?? 0
@@ -148,10 +184,9 @@ namespace MiniSupermarket.API.Controllers
             }
             catch (Exception ex)
             {
+                await transaction.RollbackAsync();
                 return StatusCode(500, new { message = "Lỗi khi xử lý thanh toán: " + ex.Message });
             }
         }
     }
-
-
 }

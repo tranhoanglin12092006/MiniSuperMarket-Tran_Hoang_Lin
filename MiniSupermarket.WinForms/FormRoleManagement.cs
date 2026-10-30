@@ -23,6 +23,12 @@ namespace MiniSupermarket.WinForms
 
         private async void FormRoleManagement_Load(object sender, EventArgs e)
         {
+            this.BackColor = UI.UITheme.Background;
+            UI.UIStyler.StyleDataGridView(dgvRoles);
+            UI.UIStyler.StyleButton(btnAdd, UI.ButtonVariant.Primary);
+            UI.UIStyler.StyleButton(btnUpdate, UI.ButtonVariant.Secondary);
+            UI.UIStyler.StyleButton(btnDelete, UI.ButtonVariant.Danger);
+            UI.UIStyler.StyleButton(btnLoad, UI.ButtonVariant.Light);
             await LoadRolesAsync();
         }
 

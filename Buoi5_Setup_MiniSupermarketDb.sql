@@ -275,3 +275,26 @@ BEGIN
     ORDER BY TotalSold DESC;
 END
 GO
+
+-- 8.4. sp_GetDailyRevenueByDateRange (Item 45: Gom nhóm theo ngày vẽ biểu đồ cột)
+IF OBJECT_ID('sp_GetDailyRevenueByDateRange', 'P') IS NOT NULL
+    DROP PROCEDURE sp_GetDailyRevenueByDateRange;
+GO
+
+CREATE PROCEDURE sp_GetDailyRevenueByDateRange
+    @FromDate DATETIME,
+    @ToDate DATETIME
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        CAST(CreatedDate AS DATE) AS OrderDate,
+        COUNT(OrderId) AS TotalOrders,
+        SUM(FinalAmount) AS TotalRevenue
+    FROM Orders
+    WHERE CreatedDate >= @FromDate AND CreatedDate <= @ToDate
+    GROUP BY CAST(CreatedDate AS DATE)
+    ORDER BY OrderDate ASC;
+END
+GO

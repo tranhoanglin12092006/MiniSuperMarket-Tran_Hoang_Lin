@@ -38,6 +38,8 @@ namespace MiniSupermarket.API.Data
         public DbSet<OrderDetail> OrderDetails { get; set; }
 
 
+
+
         // =========================================================
         // DATA SEEDING
         // =========================================================

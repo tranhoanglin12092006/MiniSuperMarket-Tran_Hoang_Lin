@@ -10,6 +10,7 @@ namespace MiniSupermarket.WinForms
         private Form? _activeForm = null;
         private Button? _currentActiveButton = null;
         private bool _isLoggingOut = false;
+        private bool _isSidebarCollapsed = false;
 
         public FormMainShell()
         {
@@ -41,7 +42,7 @@ namespace MiniSupermarket.WinForms
                 {
                     if (btn != _currentActiveButton)
                     {
-                        btn.BackColor = Color.FromArgb(30, 41, 59); // Hover slate
+                        btn.BackColor = Color.FromArgb(26, 61, 49); // Sidebar hover dark green
                         btn.ForeColor = Color.White;
                     }
                 };
@@ -51,9 +52,74 @@ namespace MiniSupermarket.WinForms
                     if (btn != _currentActiveButton)
                     {
                         btn.BackColor = Color.Transparent;
-                        btn.ForeColor = Color.FromArgb(203, 213, 225); // Slate 300
+                        btn.ForeColor = Color.FromArgb(167, 196, 181); // Muted sage text
                     }
                 };
+            }
+        }
+
+        private void btnToggleSidebar_Click(object sender, EventArgs e)
+        {
+            _isSidebarCollapsed = !_isSidebarCollapsed;
+
+            if (_isSidebarCollapsed)
+            {
+                panelSidebar.Width = 72;
+                lblLogoTitle.Visible = false;
+                lblLogoSub.Visible = false;
+                lblSystemStatus.Visible = false;
+
+                btnPOS.Text = "🛒";
+                btnProduct.Text = "📦";
+                btnCategory.Text = "📁";
+                btnCustomer.Text = "👥";
+                btnReports.Text = "📊";
+                btnUserManage.Text = "🛡️";
+                btnLogout.Text = "🚪";
+
+                btnPOS.Padding = new Padding(0);
+                btnProduct.Padding = new Padding(0);
+                btnCategory.Padding = new Padding(0);
+                btnCustomer.Padding = new Padding(0);
+                btnReports.Padding = new Padding(0);
+                btnUserManage.Padding = new Padding(0);
+
+                btnPOS.TextAlign = ContentAlignment.MiddleCenter;
+                btnProduct.TextAlign = ContentAlignment.MiddleCenter;
+                btnCategory.TextAlign = ContentAlignment.MiddleCenter;
+                btnCustomer.TextAlign = ContentAlignment.MiddleCenter;
+                btnReports.TextAlign = ContentAlignment.MiddleCenter;
+                btnUserManage.TextAlign = ContentAlignment.MiddleCenter;
+            }
+            else
+            {
+                panelSidebar.Width = 260;
+                lblLogoTitle.Visible = true;
+                lblLogoSub.Visible = true;
+                lblSystemStatus.Visible = true;
+
+                btnPOS.Text = "🛒  Bán hàng (POS)";
+                btnProduct.Text = "📦  Quản lý Sản phẩm";
+                btnCategory.Text = "📁  Quản lý Danh mục";
+                btnCustomer.Text = "👥  Khách hàng Thân thiết";
+                btnReports.Text = "📊  Báo cáo & Thống kê";
+                btnUserManage.Text = "🛡️  Quản trị Tài khoản";
+                btnLogout.Text = "🚪  Đăng xuất";
+
+                var pad = new Padding(16, 0, 0, 0);
+                btnPOS.Padding = pad;
+                btnProduct.Padding = pad;
+                btnCategory.Padding = pad;
+                btnCustomer.Padding = pad;
+                btnReports.Padding = pad;
+                btnUserManage.Padding = pad;
+
+                btnPOS.TextAlign = ContentAlignment.MiddleLeft;
+                btnProduct.TextAlign = ContentAlignment.MiddleLeft;
+                btnCategory.TextAlign = ContentAlignment.MiddleLeft;
+                btnCustomer.TextAlign = ContentAlignment.MiddleLeft;
+                btnReports.TextAlign = ContentAlignment.MiddleLeft;
+                btnUserManage.TextAlign = ContentAlignment.MiddleLeft;
             }
         }
 
@@ -80,17 +146,17 @@ namespace MiniSupermarket.WinForms
             {
                 case "ADMIN":
                     lblRoleBadge.Text = "QUẢN TRỊ VIÊN";
-                    lblRoleBadge.BackColor = Color.FromArgb(220, 38, 38); // Đỏ nổi bật
+                    lblRoleBadge.BackColor = Color.FromArgb(239, 68, 68); // Red
                     lblRoleBadge.ForeColor = Color.White;
                     break;
                 case "CASHIER":
                     lblRoleBadge.Text = "THU NGÂN (POS)";
-                    lblRoleBadge.BackColor = Color.FromArgb(16, 185, 129); // Xanh lá cây
+                    lblRoleBadge.BackColor = Color.FromArgb(22, 163, 74); // Primary Green
                     lblRoleBadge.ForeColor = Color.White;
                     break;
                 case "WAREHOUSE":
                     lblRoleBadge.Text = "THỦ KHO";
-                    lblRoleBadge.BackColor = Color.FromArgb(217, 119, 6); // Vàng cam
+                    lblRoleBadge.BackColor = Color.FromArgb(245, 158, 11); // Amber
                     lblRoleBadge.ForeColor = Color.White;
                     break;
                 default:
@@ -141,14 +207,14 @@ namespace MiniSupermarket.WinForms
             foreach (var btn in menuButtons)
             {
                 btn.BackColor = Color.Transparent;
-                btn.ForeColor = Color.FromArgb(203, 213, 225);
-                btn.Font = new Font("Segoe UI", 10.5f, FontStyle.Regular);
+                btn.ForeColor = Color.FromArgb(167, 196, 181);
+                btn.Font = new Font("Segoe UI", 10f, FontStyle.Regular);
             }
 
             _currentActiveButton = activeButton;
-            activeButton.BackColor = Color.FromArgb(37, 99, 235); // Blue 600
+            activeButton.BackColor = Color.FromArgb(22, 163, 74); // Premium Green #16A34A
             activeButton.ForeColor = Color.White;
-            activeButton.Font = new Font("Segoe UI", 10.5f, FontStyle.Bold);
+            activeButton.Font = new Font("Segoe UI", 10f, FontStyle.Bold);
         }
 
         /// <summary>
@@ -171,8 +237,8 @@ namespace MiniSupermarket.WinForms
 
                 case "CASHIER":
                     btnPOS.Visible = true;
-                    btnProduct.Visible = true;
-                    btnCustomer.Visible = true;
+                    btnProduct.Visible = false;
+                    btnCustomer.Visible = false;
                     btnCategory.Visible = false;
                     btnReports.Visible = false;
                     btnUserManage.Visible = false;
@@ -204,7 +270,7 @@ namespace MiniSupermarket.WinForms
             switch (role.ToUpper())
             {
                 case "ADMIN":
-                    OpenChildForm(new FormProductManagement(), "QUẢN LÝ SẢN PHẨM & TỒN KHO", "Sản phẩm", btnProduct);
+                    OpenChildForm(new FormQuickReport(), "BÁO CÁO DOANH THU & HIỆU SUẤT", "Báo cáo", btnReports);
                     break;
                 case "WAREHOUSE":
                     OpenChildForm(new FormProductManagement(), "QUẢN LÝ SẢN PHẨM & TỒN KHO", "Kho hàng", btnProduct);

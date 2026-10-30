@@ -57,8 +57,75 @@ namespace MiniSupermarket.API.Controllers
 
                 try
                 {
-                    decimal finalAmount = request.Items.Sum(i => i.Quantity * i.UnitPrice);
+                    decimal grossAmount = request.Items.Sum(i => i.Quantity * i.UnitPrice);
                     int totalItems = request.Items.Sum(i => i.Quantity);
+                    int customerId = request.CustomerId > 0 ? request.CustomerId : 1;
+
+                    // Nếu có truyền số điện thoại mà CustomerId chưa hợp lệ
+                    if (customerId <= 1 && !string.IsNullOrWhiteSpace(request.CustomerPhone))
+                    {
+                        string findCustSql = "SELECT CustomerId FROM customers WHERE PhoneNumber = @Phone";
+                        using (DbCommand cmdFind = connection.CreateCommand())
+                        {
+                            cmdFind.Transaction = transaction;
+                            cmdFind.CommandText = findCustSql;
+                            AdoDbHelper.AddParam(cmdFind, "@Phone", request.CustomerPhone.Trim());
+                            object? cidObj = cmdFind.ExecuteScalar();
+                            if (cidObj != null && cidObj != DBNull.Value)
+                            {
+                                customerId = Convert.ToInt32(cidObj);
+                            }
+                        }
+                    }
+
+                    // =====================================================================
+                    // BƯỚC ĐỔI ĐIỂM THƯỞNG TRỪ TIỀN (Item 47: Loyalty Points Redemption)
+                    // Cập nhật đồng thời trừ điểm trong bảng Customers và trừ FinalAmount
+                    // hoàn toàn trong cùng một DbTransaction / SqlTransaction
+                    // =====================================================================
+                    decimal discountFromPoints = 0;
+                    int pointsToRedeem = request.PointsToRedeem;
+                    if (pointsToRedeem > 0 && customerId > 1)
+                    {
+                        string checkPointsSql = "SELECT RewardPoints FROM customers WHERE CustomerId = @CustomerId";
+                        int currentPoints = 0;
+                        using (DbCommand cmdPts = connection.CreateCommand())
+                        {
+                            cmdPts.Transaction = transaction;
+                            cmdPts.CommandText = checkPointsSql;
+                            AdoDbHelper.AddParam(cmdPts, "@CustomerId", customerId);
+                            object? ptsVal = cmdPts.ExecuteScalar();
+                            if (ptsVal != null && ptsVal != DBNull.Value)
+                            {
+                                currentPoints = Convert.ToInt32(ptsVal);
+                            }
+                        }
+
+                        if (currentPoints < pointsToRedeem)
+                        {
+                            throw new InvalidOperationException($"Khách hàng không đủ điểm tích lũy để đổi (Hiện có {currentPoints} điểm, yêu cầu đổi {pointsToRedeem} điểm)!");
+                        }
+
+                        // Quy đổi: 1 điểm = 1.000 VNĐ (ví dụ: 50 điểm = 50.000 VNĐ)
+                        discountFromPoints = pointsToRedeem * 1000m;
+                        if (discountFromPoints > grossAmount)
+                        {
+                            discountFromPoints = grossAmount;
+                        }
+
+                        // Thực hiện trừ điểm khách hàng trong transaction
+                        string deductPointsSql = "UPDATE customers SET RewardPoints = RewardPoints - @Redeem WHERE CustomerId = @CustomerId";
+                        using (DbCommand cmdDeduct = connection.CreateCommand())
+                        {
+                            cmdDeduct.Transaction = transaction;
+                            cmdDeduct.CommandText = deductPointsSql;
+                            AdoDbHelper.AddParam(cmdDeduct, "@Redeem", pointsToRedeem);
+                            AdoDbHelper.AddParam(cmdDeduct, "@CustomerId", customerId);
+                            cmdDeduct.ExecuteNonQuery();
+                        }
+                    }
+
+                    decimal finalAmount = Math.Max(0, grossAmount - discountFromPoints);
                     int rewardPoints = (int)(finalAmount / 10000);
                     string orderCode = $"HD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString().Substring(0, 4).ToUpper()}";
 
@@ -80,7 +147,7 @@ namespace MiniSupermarket.API.Controllers
                         cmdOrder.CommandText = insertOrderSql;
                         AdoDbHelper.AddParam(cmdOrder, "@OrderCode", orderCode);
                         AdoDbHelper.AddParam(cmdOrder, "@CashierUsername", request.CashierUsername.Trim());
-                        AdoDbHelper.AddParam(cmdOrder, "@CustomerId", request.CustomerId > 0 ? request.CustomerId : 1);
+                        AdoDbHelper.AddParam(cmdOrder, "@CustomerId", customerId > 0 ? customerId : 1);
                         AdoDbHelper.AddParam(cmdOrder, "@TotalItems", totalItems);
                         AdoDbHelper.AddParam(cmdOrder, "@FinalAmount", finalAmount);
                         AdoDbHelper.AddParam(cmdOrder, "@RewardPoints", rewardPoints);
@@ -155,8 +222,7 @@ namespace MiniSupermarket.API.Controllers
                     // =====================================================================
                     // BƯỚC 4: CONG DIEM TICH LUY CHO KHACH HANG
                     // =====================================================================
-                    int customerId = request.CustomerId > 0 ? request.CustomerId : 1;
-                    if (rewardPoints > 0)
+                    if (rewardPoints > 0 && customerId > 1)
                     {
                         string updatePointsSql = @"
                             UPDATE customers 
@@ -183,6 +249,9 @@ namespace MiniSupermarket.API.Controllers
                         orderId = orderId,
                         orderCode = orderCode,
                         totalItems = totalItems,
+                        grossAmount = grossAmount,
+                        discountFromPoints = discountFromPoints,
+                        pointsRedeemed = pointsToRedeem,
                         finalAmount = finalAmount,
                         rewardPointsAdded = rewardPoints
                     });

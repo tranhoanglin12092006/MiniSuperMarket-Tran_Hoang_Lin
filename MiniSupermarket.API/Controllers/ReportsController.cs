@@ -301,25 +301,41 @@ namespace MiniSupermarket.API.Controllers
             }
         }
 
-        // GET: api/reports/orders?date=2026-10-01
+        // GET: api/reports/orders?date=2026-10-01&all=false
         [HttpGet("orders")]
-        public async Task<IActionResult> GetOrdersByDate([FromQuery] DateTime date)
+        public async Task<IActionResult> GetOrdersByDate(
+            [FromQuery] DateTime? date, 
+            [FromQuery] bool all = false,
+            [FromQuery] DateTime? fromDate = null,
+            [FromQuery] DateTime? toDate = null)
         {
             try
             {
-                var startDate = date.Date;
-                var endDate = startDate.AddDays(1);
-
-                var orders = await _context.Orders
+                var query = _context.Orders
                     .AsNoTracking()
-                    .Where(o => o.CreatedDate >= startDate && o.CreatedDate < endDate)
                     .Include(o => o.Customer)
+                    .AsQueryable();
+
+                if (fromDate.HasValue && toDate.HasValue)
+                {
+                    var startDate = fromDate.Value.Date;
+                    var endDate = toDate.Value.Date.AddDays(1);
+                    query = query.Where(o => o.CreatedDate >= startDate && o.CreatedDate < endDate);
+                }
+                else if (!all && date.HasValue)
+                {
+                    var startDate = date.Value.Date;
+                    var endDate = startDate.AddDays(1);
+                    query = query.Where(o => o.CreatedDate >= startDate && o.CreatedDate < endDate);
+                }
+
+                var orders = await query
                     .OrderByDescending(o => o.CreatedDate)
                     .Select(o => new
                     {
                         o.OrderId,
                         o.OrderCode,
-                        Time = o.CreatedDate.ToString("HH:mm:ss"),
+                        Time = o.CreatedDate.ToString("dd/MM/yyyy HH:mm:ss"),
                         CustomerName = (o.Customer != null && !string.IsNullOrWhiteSpace(o.Customer.CustomerName) && o.Customer.CustomerName != "Khách lẻ")
                             ? o.Customer.CustomerName
                             : "Khách hàng vãng lai",
@@ -335,6 +351,223 @@ namespace MiniSupermarket.API.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { message = "Lỗi lấy danh sách hóa đơn: " + ex.Message });
+            }
+        }
+
+        // GET: api/reports/orders/{orderId}/details (Xem chi tiết từng món hàng trong hóa đơn)
+        [HttpGet("orders/{orderId}/details")]
+        public async Task<IActionResult> GetOrderDetails(int orderId)
+        {
+            try
+            {
+                var details = await _context.OrderDetails
+                    .AsNoTracking()
+                    .Where(od => od.OrderId == orderId)
+                    .Include(od => od.Product)
+                    .Select(od => new
+                    {
+                        od.OrderDetailId,
+                        od.OrderId,
+                        od.ProductId,
+                        ProductName = od.Product != null ? od.Product.ProductName : $"Sản phẩm #{od.ProductId}",
+                        Barcode = od.Product != null ? od.Product.Barcode : "",
+                        od.Quantity,
+                        od.UnitPrice,
+                        od.LineTotal
+                    })
+                    .ToListAsync();
+
+                return Ok(details);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Lỗi lấy chi tiết hóa đơn: " + ex.Message });
+            }
+        }
+
+        // =========================================================================
+        // ITEM 44: DASHBOARD THẺ CHỈ SỐ TỔNG QUAN (KPI SUMMARY CARDS)
+        // Nghiệp vụ: Doanh thu hôm nay (VNĐ), Tổng số hóa đơn đã xuất,
+        //            Số lượng khách hàng mới đăng ký, Số mặt hàng sắp hết hàng (tồn kho <= 10)
+        // Kỹ thuật: Viết 1 Action API GET api/reports/dashboard-summary dùng LINQ Count(), Sum()
+        // =========================================================================
+        [AllowAnonymous]
+        [HttpGet("dashboard-summary")]
+        public async Task<IActionResult> GetDashboardSummary()
+        {
+            try
+            {
+                var today = DateTime.Today;
+                var tomorrow = today.AddDays(1);
+
+                // 1. Doanh thu hôm nay (VNĐ)
+                var todayRevenue = await _context.Orders
+                    .AsNoTracking()
+                    .Where(o => o.CreatedDate >= today && o.CreatedDate < tomorrow)
+                    .SumAsync(o => (decimal?)o.FinalAmount) ?? 0m;
+
+                // 2. Tổng số hóa đơn đã xuất
+                var totalOrders = await _context.Orders.AsNoTracking().CountAsync();
+                var todayOrders = await _context.Orders
+                    .AsNoTracking()
+                    .CountAsync(o => o.CreatedDate >= today && o.CreatedDate < tomorrow);
+
+                // 3. Số lượng khách hàng mới đăng ký
+                var newCustomers = await _context.Customers.AsNoTracking().CountAsync();
+
+                // 4. Số mặt hàng sắp hết hàng (tồn kho <= 10)
+                var lowStockCount = await _context.Products
+                    .AsNoTracking()
+                    .CountAsync(p => p.StockQuantity <= 10);
+
+                return Ok(new
+                {
+                    success = true,
+                    todayRevenue = todayRevenue,
+                    totalOrders = totalOrders,
+                    todayOrders = todayOrders,
+                    newCustomers = newCustomers,
+                    lowStockCount = lowStockCount
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi tính toán Dashboard KPI: " + ex.Message });
+            }
+        }
+
+        // =========================================================================
+        // ITEM 45: BIỂU ĐỒ CỘT DOANH THU THEO KHOẢNG NGÀY (BAR/COLUMN CHART)
+        // Kỹ thuật: Phía API viết query gom nhóm GROUP BY CAST(CreatedDate AS DATE)
+        // =========================================================================
+        [AllowAnonymous]
+        [HttpGet("daily-revenue-chart")]
+        public async Task<IActionResult> GetDailyRevenueChart([FromQuery] DateTime? fromDate, [FromQuery] DateTime? toDate)
+        {
+            try
+            {
+                var fDate = (fromDate ?? DateTime.Today.AddDays(-7)).Date;
+                var tDate = (toDate ?? DateTime.Today).Date.AddDays(1).AddTicks(-1);
+
+                var chartData = new List<object>();
+                string connectionString = GetConnectionString();
+
+                try
+                {
+                    using (DbConnection connection = AdoDbHelper.CreateConnection(connectionString))
+                    {
+                        using (DbCommand command = connection.CreateCommand())
+                        {
+                            command.CommandText = "sp_GetDailyRevenueByDateRange";
+                            command.CommandType = CommandType.StoredProcedure;
+                            bool isMySql = AdoDbHelper.IsMySql(connectionString);
+                            AdoDbHelper.AddParam(command, isMySql ? "p_FromDate" : "@FromDate", fDate);
+                            AdoDbHelper.AddParam(command, isMySql ? "p_ToDate" : "@ToDate", tDate);
+
+                            connection.Open();
+                            using (DbDataReader reader = command.ExecuteReader())
+                            {
+                                while (reader.Read())
+                                {
+                                    chartData.Add(new
+                                    {
+                                        OrderDate = Convert.ToDateTime(reader["OrderDate"]).ToString("dd/MM/yyyy"),
+                                        DateKey = Convert.ToDateTime(reader["OrderDate"]).ToString("yyyy-MM-dd"),
+                                        TotalOrders = Convert.ToInt32(reader["TotalOrders"]),
+                                        TotalRevenue = Convert.ToDecimal(reader["TotalRevenue"])
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                catch
+                {
+                    // Fallback LINQ gom nhóm theo ngày
+                    var linqResult = await _context.Orders
+                        .AsNoTracking()
+                        .Where(o => o.CreatedDate >= fDate && o.CreatedDate <= tDate)
+                        .GroupBy(o => o.CreatedDate.Date)
+                        .Select(g => new
+                        {
+                            Date = g.Key,
+                            TotalOrders = g.Count(),
+                            TotalRevenue = g.Sum(x => x.FinalAmount)
+                        })
+                        .OrderBy(x => x.Date)
+                        .ToListAsync();
+
+                    chartData = linqResult.Select(x => (object)new
+                    {
+                        OrderDate = x.Date.ToString("dd/MM/yyyy"),
+                        DateKey = x.Date.ToString("yyyy-MM-dd"),
+                        TotalOrders = x.TotalOrders,
+                        TotalRevenue = x.TotalRevenue
+                    }).ToList();
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    fromDate = fDate.ToString("yyyy-MM-dd"),
+                    toDate = tDate.ToString("yyyy-MM-dd"),
+                    data = chartData
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi lấy dữ liệu biểu đồ doanh thu: " + ex.Message });
+            }
+        }
+
+        // =========================================================================
+        // ITEM 46: THỐNG KÊ TOP 5 SẢN PHẨM BÁN CHẠY NHẤT (BEST-SELLERS)
+        // Kỹ thuật: LINQ GroupBy(od => od.ProductId) -> OrderByDescending(Sum Quantity) -> Take(5)
+        // =========================================================================
+        [AllowAnonymous]
+        [HttpGet("top-selling-products-linq")]
+        public async Task<IActionResult> GetTop5SellingProductsLinq()
+        {
+            try
+            {
+                var topGroup = await _context.OrderDetails
+                    .AsNoTracking()
+                    .GroupBy(od => od.ProductId)
+                    .Select(g => new
+                    {
+                        ProductId = g.Key,
+                        TotalSold = g.Sum(od => od.Quantity),
+                        TotalSalesRevenue = g.Sum(od => od.LineTotal)
+                    })
+                    .OrderByDescending(x => x.TotalSold)
+                    .Take(5)
+                    .ToListAsync();
+
+                var productIds = topGroup.Select(x => x.ProductId).ToList();
+                var products = await _context.Products
+                    .AsNoTracking()
+                    .Where(p => productIds.Contains(p.ProductId))
+                    .ToDictionaryAsync(p => p.ProductId);
+
+                var result = topGroup.Select(x => new
+                {
+                    ProductId = x.ProductId,
+                    Barcode = products.ContainsKey(x.ProductId) ? products[x.ProductId].Barcode : "",
+                    ProductName = products.ContainsKey(x.ProductId) ? products[x.ProductId].ProductName : $"Sản phẩm #{x.ProductId}",
+                    TotalSold = x.TotalSold,
+                    TotalSalesRevenue = x.TotalSalesRevenue
+                }).ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    generatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                    data = result
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Lỗi LINQ Top 5 sản phẩm: " + ex.Message });
             }
         }
     }

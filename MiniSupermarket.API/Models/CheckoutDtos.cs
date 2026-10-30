@@ -31,6 +31,9 @@ namespace MiniSupermarket.API.Models
         // So dien thoai khach hang (neu co truyen tu client cu)
         public string CustomerPhone { get; set; } = string.Empty;
 
+        // So diem thuong muon quy doi tru tien hoa don (Item 47: 1 diem = 1.000 VND)
+        public int PointsToRedeem { get; set; } = 0;
+
         // Danh sach cac mon hang can thanh toan
         public List<CartItemCheckoutDto> Items { get; set; } = new();
     }

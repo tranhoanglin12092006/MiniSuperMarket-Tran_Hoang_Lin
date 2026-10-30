@@ -47,3 +47,18 @@ BEGIN
     LIMIT 5;
 END //
 DELIMITER ;
+
+DROP PROCEDURE IF EXISTS sp_GetDailyRevenueByDateRange;
+DELIMITER //
+CREATE PROCEDURE sp_GetDailyRevenueByDateRange(IN p_FromDate DATETIME, IN p_ToDate DATETIME)
+BEGIN
+    SELECT 
+        DATE(CreatedDate) AS OrderDate,
+        COUNT(OrderId) AS TotalOrders,
+        SUM(FinalAmount) AS TotalRevenue
+    FROM orders
+    WHERE CreatedDate >= p_FromDate AND CreatedDate <= p_ToDate
+    GROUP BY DATE(CreatedDate)
+    ORDER BY OrderDate ASC;
+END //
+DELIMITER ;
