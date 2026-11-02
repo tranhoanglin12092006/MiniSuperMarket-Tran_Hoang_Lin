@@ -69,7 +69,9 @@ namespace MiniSupermarket.WinForms
 
         // Nút Thanh toán cố định ở đáy (Pinned CTA) & Thanh trạng thái
         private System.Windows.Forms.Panel pnlCheckoutAction;
+        private System.Windows.Forms.TableLayoutPanel tlpCheckoutButtons;
         private System.Windows.Forms.Button btnCheckout;
+        private System.Windows.Forms.Button btnVietQR;
         private System.Windows.Forms.Label lblStatusMsg;
 
         protected override void Dispose(bool disposing)
@@ -148,7 +150,9 @@ namespace MiniSupermarket.WinForms
             this.lblChange = new System.Windows.Forms.Label();
 
             this.pnlCheckoutAction = new System.Windows.Forms.Panel();
+            this.tlpCheckoutButtons = new System.Windows.Forms.TableLayoutPanel();
             this.btnCheckout = new System.Windows.Forms.Button();
+            this.btnVietQR = new System.Windows.Forms.Button();
             this.lblStatusMsg = new System.Windows.Forms.Label();
 
             this.pnlMainContainer.SuspendLayout();
@@ -172,6 +176,7 @@ namespace MiniSupermarket.WinForms
             this.pnlPaymentBox.SuspendLayout();
             this.pnlPriceBreakdown.SuspendLayout();
             this.pnlCheckoutAction.SuspendLayout();
+            this.tlpCheckoutButtons.SuspendLayout();
             this.SuspendLayout();
 
             // 
@@ -842,32 +847,63 @@ namespace MiniSupermarket.WinForms
             this.lblChange.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
 
             // =============================================================
-            // CỘT PHẢI - NÚT THANH TOÁN PINNED (CỐ ĐỊNH Ở ĐÁY, KHÔNG BAO GIỜ MẤT)
+            // CỘT PHẢI - NÚT THANH TOÁN PINNED (TIỀN MẶT & VIETQR DUAL CTA)
             // =============================================================
             this.pnlCheckoutAction.BackColor = System.Drawing.Color.White;
-            this.pnlCheckoutAction.Controls.Add(this.btnCheckout);
+            this.pnlCheckoutAction.Controls.Add(this.tlpCheckoutButtons);
             this.pnlCheckoutAction.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlCheckoutAction.Location = new System.Drawing.Point(0, 638);
+            this.pnlCheckoutAction.Location = new System.Drawing.Point(0, 634);
             this.pnlCheckoutAction.Name = "pnlCheckoutAction";
-            this.pnlCheckoutAction.Padding = new System.Windows.Forms.Padding(10, 5, 10, 5);
-            this.pnlCheckoutAction.Size = new System.Drawing.Size(365, 62);
+            this.pnlCheckoutAction.Padding = new System.Windows.Forms.Padding(8, 5, 8, 5);
+            this.pnlCheckoutAction.Size = new System.Drawing.Size(365, 66);
             this.pnlCheckoutAction.TabIndex = 1;
 
-            // btnCheckout (Nút thanh toán lớn CTA)
+            // tlpCheckoutButtons
+            this.tlpCheckoutButtons.ColumnCount = 2;
+            this.tlpCheckoutButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tlpCheckoutButtons.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tlpCheckoutButtons.Controls.Add(this.btnCheckout, 0, 0);
+            this.tlpCheckoutButtons.Controls.Add(this.btnVietQR, 1, 0);
+            this.tlpCheckoutButtons.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tlpCheckoutButtons.Location = new System.Drawing.Point(8, 5);
+            this.tlpCheckoutButtons.Margin = new System.Windows.Forms.Padding(0);
+            this.tlpCheckoutButtons.Name = "tlpCheckoutButtons";
+            this.tlpCheckoutButtons.RowCount = 1;
+            this.tlpCheckoutButtons.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tlpCheckoutButtons.Size = new System.Drawing.Size(349, 56);
+            this.tlpCheckoutButtons.TabIndex = 0;
+
+            // btnCheckout (Nút thanh toán tiền mặt F9)
             this.btnCheckout.BackColor = System.Drawing.Color.FromArgb(22, 163, 74); // Emerald 600
             this.btnCheckout.Cursor = System.Windows.Forms.Cursors.Hand;
             this.btnCheckout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnCheckout.FlatAppearance.BorderSize = 0;
             this.btnCheckout.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnCheckout.Font = new System.Drawing.Font("Segoe UI", 13F, System.Drawing.FontStyle.Bold);
+            this.btnCheckout.Font = new System.Drawing.Font("Segoe UI", 10.5F, System.Drawing.FontStyle.Bold);
             this.btnCheckout.ForeColor = System.Drawing.Color.White;
-            this.btnCheckout.Location = new System.Drawing.Point(10, 5);
+            this.btnCheckout.Margin = new System.Windows.Forms.Padding(0, 0, 4, 0);
             this.btnCheckout.Name = "btnCheckout";
-            this.btnCheckout.Size = new System.Drawing.Size(345, 52);
+            this.btnCheckout.Size = new System.Drawing.Size(170, 56);
             this.btnCheckout.TabIndex = 0;
-            this.btnCheckout.Text = "⚡ THANH TOÁN (F9)";
+            this.btnCheckout.Text = "💵 TIỀN MẶT (F9)";
             this.btnCheckout.UseVisualStyleBackColor = false;
             this.btnCheckout.Click += new System.EventHandler(this.btnCheckout_Click);
+
+            // btnVietQR (Nút thanh toán chuyển khoản VietQR F10)
+            this.btnVietQR.BackColor = System.Drawing.Color.FromArgb(37, 99, 235); // Blue 600
+            this.btnVietQR.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnVietQR.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnVietQR.FlatAppearance.BorderSize = 0;
+            this.btnVietQR.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnVietQR.Font = new System.Drawing.Font("Segoe UI", 10.5F, System.Drawing.FontStyle.Bold);
+            this.btnVietQR.ForeColor = System.Drawing.Color.White;
+            this.btnVietQR.Margin = new System.Windows.Forms.Padding(4, 0, 0, 0);
+            this.btnVietQR.Name = "btnVietQR";
+            this.btnVietQR.Size = new System.Drawing.Size(171, 56);
+            this.btnVietQR.TabIndex = 1;
+            this.btnVietQR.Text = "📱 VIETQR (F10)";
+            this.btnVietQR.UseVisualStyleBackColor = false;
+            this.btnVietQR.Click += new System.EventHandler(this.btnVietQR_Click);
 
             // lblStatusMsg (Thanh thông báo trạng thái dưới cùng)
             this.lblStatusMsg.BackColor = System.Drawing.Color.FromArgb(248, 250, 249);
@@ -910,6 +946,7 @@ namespace MiniSupermarket.WinForms
             this.pnlPaymentBox.PerformLayout();
             this.pnlPriceBreakdown.ResumeLayout(false);
             this.pnlPriceBreakdown.PerformLayout();
+            this.tlpCheckoutButtons.ResumeLayout(false);
             this.pnlCheckoutAction.ResumeLayout(false);
 
             this.ResumeLayout(false);

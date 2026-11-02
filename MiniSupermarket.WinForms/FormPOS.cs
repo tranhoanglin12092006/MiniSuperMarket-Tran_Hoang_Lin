@@ -182,6 +182,11 @@ namespace MiniSupermarket.WinForms
                 btnCheckout.PerformClick();
                 return true;
             }
+            if (keyData == Keys.F10)
+            {
+                btnVietQR.PerformClick();
+                return true;
+            }
             if (keyData == Keys.Delete && dgvCart.Focused)
             {
                 btnRemoveItem.PerformClick();
@@ -590,28 +595,52 @@ namespace MiniSupermarket.WinForms
                 var response = await ApiClientService.PostAsJsonWithAuthAsync("orders/checkout", orderRequest);
                 if (response.IsSuccessStatusCode)
                 {
+                    var jsonStr = await response.Content.ReadAsStringAsync();
+                    string orderCode = $"HD{DateTime.Now:yyyyMMddHHmmss}";
+                    int rewardPointsAdded = 0;
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(jsonStr);
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("orderCode", out var codeProp))
+                            orderCode = codeProp.GetString() ?? orderCode;
+                        if (root.TryGetProperty("rewardPointsAdded", out var ptProp))
+                            rewardPointsAdded = ptProp.GetInt32();
+                    }
+                    catch { }
+
                     decimal change = (decimal.TryParse(rawCash, out decimal cash) ? cash : total) - total;
-                    string changeMsg = change > 0 ? $"\nTiền thừa gửi lại khách: {change:N0} đ" : "";
-                    string discountMsg = breakdown.Discount > 0 ? $"\nĐổi điểm thưởng: Dùng {breakdown.PointsRedeemed} điểm (-{breakdown.Discount:N0} đ)" : "";
 
-                    string receiptSummary = 
-                        "=========================================\n" +
-                        "          MINI SUPERMARKET POS           \n" +
-                        "       HÓA ĐƠN BÁN LẺ THANH TOÁN         \n" +
-                        "=========================================\n" +
-                        $"Thu ngân: {SessionManager.CurrentUsername ?? "Thu ngân"}\n" +
-                        $"Thời gian: {DateTime.Now:dd/MM/yyyy HH:mm:ss}\n" +
-                        $"Khách hàng: {lblCustomerName.Text}\n" +
-                        "-----------------------------------------\n" +
-                        $"Tổng số món: {_cart.Sum(x => x.Quantity)} SP ({_cart.Count} loại)\n" +
-                        $"Tổng tiền hàng: {breakdown.GrossTotal:N0} đ" + discountMsg + "\n" +
-                        $"THANH TOÁN THỰC TẾ: {breakdown.FinalTotal:N0} đ\n" +
-                        $"Tiền khách đưa: {(cashReceived > 0 ? cashReceived : total):N0} đ" + changeMsg + "\n" +
-                        "=========================================\n" +
-                        "  Cảm ơn Quý khách & Hẹn gặp lại!\n" +
-                        "=========================================";
+                    // Chuẩn bị dữ liệu hóa đơn in nhiệt K80
+                    var receiptData = new ReceiptData
+                    {
+                        OrderCode = orderCode,
+                        OrderDate = DateTime.Now,
+                        CashierName = SessionManager.CurrentFullName ?? SessionManager.CurrentUsername ?? "Thu ngân",
+                        CustomerName = _currentCustomer?.CustomerName ?? (string.IsNullOrWhiteSpace(txtCustomerPhone.Text) ? "Khách hàng vãng lai" : "Khách hàng"),
+                        CustomerPhone = txtCustomerPhone.Text.Trim(),
+                        CustomerRank = _currentCustomer?.MembershipRank ?? "Chuẩn",
+                        RewardPointsAdded = rewardPointsAdded,
+                        PointsRedeemed = breakdown.PointsRedeemed,
+                        GrossAmount = breakdown.GrossTotal,
+                        Discount = breakdown.Discount,
+                        FinalAmount = breakdown.FinalTotal,
+                        CashReceived = cashReceived > 0 ? cashReceived : total,
+                        ChangeAmount = Math.Max(0, change),
+                        PaymentMethod = "Tiền mặt",
+                        Items = _cart.Select(i => new ReceiptItemData
+                        {
+                            ProductName = i.ProductName,
+                            Quantity = i.Quantity,
+                            UnitPrice = i.UnitPrice
+                        }).ToList()
+                    };
 
-                    MessageBox.Show(receiptSummary, "🎉 THANH TOÁN THÀNH CÔNG", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // Hiển thị Cửa sổ Hóa đơn bán lẻ K80 chuyên nghiệp
+                    using (var receiptDlg = new FormReceiptDialog(receiptData))
+                    {
+                        receiptDlg.ShowDialog(this);
+                    }
 
                     _cart.Clear();
                     _currentCustomer = null;
@@ -644,7 +673,150 @@ namespace MiniSupermarket.WinForms
             finally
             {
                 btnCheckout.Enabled = true;
-                btnCheckout.Text = "⚡ THANH TOÁN (F9)";
+                btnCheckout.Text = "💵 TIỀN MẶT (F9)";
+            }
+        }
+
+        // =========================================================================
+        // XỬ LÝ THANH TOÁN CHUYỂN KHOẢN VIETQR (NAPAS 247)
+        // =========================================================================
+        private async void btnVietQR_Click(object? sender, EventArgs e)
+        {
+            if (_cart.Count == 0)
+            {
+                MessageBox.Show("Giỏ hàng đang trống! Vui lòng quét ít nhất một sản phẩm trước khi thanh toán VietQR.", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                txtBarcode.Focus();
+                return;
+            }
+
+            var breakdown = GetPaymentBreakdown();
+            decimal total = breakdown.FinalTotal;
+            string tempOrderCode = $"HD{DateTime.Now:yyyyMMddHHmmss}";
+            string custName = _currentCustomer?.CustomerName ?? (string.IsNullOrWhiteSpace(txtCustomerPhone.Text) ? "Khách hàng vãng lai" : "Khách hàng");
+
+            // Mở cửa sổ VietQR động để khách hàng quét mã thanh toán
+            var qrData = new VietQRData
+            {
+                OrderCode = tempOrderCode,
+                Amount = total,
+                CustomerName = custName,
+                BankName = "MB Bank (Ngân hàng Quân Đội)",
+                BankBin = "970422",
+                AccountNumber = "0386686888",
+                AccountName = "MINIMART SUPERMARKET"
+            };
+
+            using (var qrDlg = new FormVietQRDialog(qrData))
+            {
+                var dialogResult = qrDlg.ShowDialog(this);
+                if (dialogResult != DialogResult.OK)
+                {
+                    lblStatusMsg.Text = "ℹ️ Đã hủy giao dịch thanh toán VietQR.";
+                    lblStatusMsg.ForeColor = Color.SlateGray;
+                    return;
+                }
+            }
+
+            // Thu ngân đã bấm "Xác nhận đã nhận tiền (Enter)" -> Tiến hành lưu đơn hàng vào hệ thống
+            var orderRequest = new
+            {
+                CashierUsername = SessionManager.CurrentUsername,
+                CustomerId = _currentCustomer?.CustomerId ?? 1,
+                CustomerPhone = txtCustomerPhone.Text.Trim(),
+                PointsToRedeem = breakdown.PointsRedeemed,
+                Items = _cart.Select(i => new { i.ProductId, i.Quantity, i.UnitPrice }).ToList()
+            };
+
+            btnVietQR.Enabled = false;
+            btnCheckout.Enabled = false;
+            btnVietQR.Text = "⏳ ĐANG XỬ LÝ...";
+            lblStatusMsg.Text = "Đang lưu hóa đơn thanh toán VietQR lên hệ thống...";
+            lblStatusMsg.ForeColor = Color.SteelBlue;
+
+            try
+            {
+                var response = await ApiClientService.PostAsJsonWithAuthAsync("orders/checkout", orderRequest);
+                if (response.IsSuccessStatusCode)
+                {
+                    var jsonStr = await response.Content.ReadAsStringAsync();
+                    string orderCode = tempOrderCode;
+                    int rewardPointsAdded = 0;
+                    try
+                    {
+                        using var doc = System.Text.Json.JsonDocument.Parse(jsonStr);
+                        var root = doc.RootElement;
+                        if (root.TryGetProperty("orderCode", out var codeProp))
+                            orderCode = codeProp.GetString() ?? orderCode;
+                        if (root.TryGetProperty("rewardPointsAdded", out var ptProp))
+                            rewardPointsAdded = ptProp.GetInt32();
+                    }
+                    catch { }
+
+                    // Chuẩn bị dữ liệu hóa đơn in nhiệt K80
+                    var receiptData = new ReceiptData
+                    {
+                        OrderCode = orderCode,
+                        OrderDate = DateTime.Now,
+                        CashierName = SessionManager.CurrentFullName ?? SessionManager.CurrentUsername ?? "Thu ngân",
+                        CustomerName = custName,
+                        CustomerPhone = txtCustomerPhone.Text.Trim(),
+                        CustomerRank = _currentCustomer?.MembershipRank ?? "Chuẩn",
+                        RewardPointsAdded = rewardPointsAdded,
+                        PointsRedeemed = breakdown.PointsRedeemed,
+                        GrossAmount = breakdown.GrossTotal,
+                        Discount = breakdown.Discount,
+                        FinalAmount = breakdown.FinalTotal,
+                        CashReceived = total,
+                        ChangeAmount = 0,
+                        PaymentMethod = "Chuyển khoản VietQR (Napas 247)",
+                        Items = _cart.Select(i => new ReceiptItemData
+                        {
+                            ProductName = i.ProductName,
+                            Quantity = i.Quantity,
+                            UnitPrice = i.UnitPrice
+                        }).ToList()
+                    };
+
+                    // Hiển thị Cửa sổ Hóa đơn bán lẻ K80 chuyên nghiệp
+                    using (var receiptDlg = new FormReceiptDialog(receiptData))
+                    {
+                        receiptDlg.ShowDialog(this);
+                    }
+
+                    _cart.Clear();
+                    _currentCustomer = null;
+                    chkUsePoints.Checked = false;
+                    nudRedeemPoints.Value = 0;
+                    pnlLoyaltyBox.Enabled = false;
+                    UpdateCartDisplay();
+                    txtCashReceived.Clear();
+                    txtCustomerPhone.Clear();
+                    lblCustomerName.Text = "Khách hàng vãng lai";
+                    lblCustomerRank.Text = "Hạng: Chuẩn (0 đ)";
+                    lblStatusMsg.Text = "✅ Giao dịch VietQR hoàn tất thành công! Sẵn sàng lượt quét mới.";
+                    lblStatusMsg.ForeColor = Color.FromArgb(22, 163, 74);
+                    txtBarcode.Focus();
+                }
+                else
+                {
+                    var errorMsg = await response.Content.ReadAsStringAsync();
+                    lblStatusMsg.Text = "❌ Lỗi thanh toán VietQR!";
+                    lblStatusMsg.ForeColor = Color.Crimson;
+                    MessageBox.Show($"Thanh toán VietQR thất bại từ máy chủ: {errorMsg}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                lblStatusMsg.Text = "❌ Lỗi kết nối!";
+                lblStatusMsg.ForeColor = Color.Crimson;
+                MessageBox.Show("Lỗi kết nối khi lưu đơn hàng VietQR: " + ex.Message, "Lỗi kết nối", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnVietQR.Enabled = true;
+                btnCheckout.Enabled = true;
+                btnVietQR.Text = "📱 VIETQR (F10)";
+                btnCheckout.Text = "💵 TIỀN MẶT (F9)";
             }
         }
     }

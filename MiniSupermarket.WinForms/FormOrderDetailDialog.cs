@@ -96,20 +96,58 @@ namespace MiniSupermarket.WinForms
                 AutoSize = true
             };
 
+            Button btnPrintReceipt = new Button
+            {
+                Text = "🖨️ In lại hóa đơn K80",
+                Size = new Size(165, 36),
+                Location = new Point(500, 14),
+                BackColor = Color.FromArgb(16, 42, 33), // Dark Green
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
+                Cursor = Cursors.Hand
+            };
+            btnPrintReceipt.FlatAppearance.BorderSize = 0;
+            btnPrintReceipt.Click += (s, e) =>
+            {
+                var receiptData = new ReceiptData
+                {
+                    OrderCode = _order.OrderCode,
+                    OrderDate = DateTime.TryParse(_order.Time, out var dt) ? dt : DateTime.Now,
+                    CashierName = _order.Cashier,
+                    CustomerName = _order.CustomerName,
+                    RewardPointsAdded = _order.RewardPoints,
+                    GrossAmount = _order.FinalAmount,
+                    FinalAmount = _order.FinalAmount,
+                    CashReceived = _order.FinalAmount,
+                    ChangeAmount = 0,
+                    PaymentMethod = "Đã thanh toán",
+                    Items = _details.Select(d => new ReceiptItemData
+                    {
+                        ProductName = d.ProductName,
+                        Quantity = d.Quantity,
+                        UnitPrice = d.UnitPrice
+                    }).ToList()
+                };
+
+                using var receiptDlg = new FormReceiptDialog(receiptData);
+                receiptDlg.ShowDialog(this);
+            };
+
             Button btnClose = new Button
             {
                 Text = "Đóng",
                 DialogResult = DialogResult.OK,
-                Size = new Size(110, 36),
+                Size = new Size(100, 36),
                 Location = new Point(680, 14),
-                BackColor = Color.FromArgb(22, 163, 74),
+                BackColor = Color.FromArgb(100, 116, 139),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Font = new Font("Segoe UI", 9.5f, FontStyle.Bold),
                 Cursor = Cursors.Hand
             };
             btnClose.FlatAppearance.BorderSize = 0;
-            pnlFooter.Controls.AddRange(new Control[] { lblTotal, btnClose });
+            pnlFooter.Controls.AddRange(new Control[] { lblTotal, btnPrintReceipt, btnClose });
 
             // 3. Gridview chi tiết sản phẩm
             _dgvDetails = new DataGridView

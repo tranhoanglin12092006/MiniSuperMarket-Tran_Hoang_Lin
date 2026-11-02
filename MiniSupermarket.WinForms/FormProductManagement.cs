@@ -263,10 +263,10 @@ namespace MiniSupermarket.WinForms
             SetHeader("ProductId", "ID", 65, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
             SetHeader("Barcode", "Mã vạch", 145, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
             SetHeader("ProductName", "Tên sản phẩm", 240, DataGridViewAutoSizeColumnMode.Fill, DataGridViewContentAlignment.MiddleLeft);
-            SetHeader("Price", "Đơn giá (VNĐ)", 130, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleRight, "N0");
-            SetHeader("StockQuantity", "Tồn kho", 90, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter, "N0");
+            SetHeader("Price", "Đơn giá (VNĐ)", 135, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleRight, "N0");
+            SetHeader("StockQuantity", "Tồn kho", 100, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter, "N0");
             SetHeader("CategoryName", "Nhóm hàng", 160, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleLeft);
-            SetHeader("CategoryId", "Mã nhóm", 85, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
+            SetHeader("CategoryId", "Mã nhóm", 90, DataGridViewAutoSizeColumnMode.None, DataGridViewContentAlignment.MiddleCenter);
         }
 
         // =========================================================================
@@ -547,35 +547,71 @@ namespace MiniSupermarket.WinForms
         }
 
         // =========================================================================
-        // ITEM 43: HUY HIỆU & CẢNH BÁO HÀNG SẮP HẾT KHO (LOW-STOCK ALERT)
+        // =========================================================================
+        // ITEM 43: HUY HIỆU & CẢNH BÁO HÀNG SẮP HẾT KHO (LOW-STOCK ALERT <= 10)
         // =========================================================================
         private void dgvProducts_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.RowIndex < 0 || e.RowIndex >= dgvProducts.Rows.Count) return;
+            if (e.RowIndex < 0 || e.RowIndex >= dgvProducts.Rows.Count || e.CellStyle == null) return;
             var row = dgvProducts.Rows[e.RowIndex];
             if (row == null || row.DataBoundItem is not ProductItemViewDto item) return;
 
             var col = dgvProducts.Columns[e.ColumnIndex];
-            if (col != null && col.DataPropertyName != null)
+            if (col == null || string.IsNullOrEmpty(col.DataPropertyName)) return;
+
+            bool isLowStock = item.StockQuantity <= 10;
+            bool isOutOfStock = item.StockQuantity <= 0;
+
+            // 1. Nếu tồn kho <= 10: Tô màu nền cảnh báo dịu mắt cho CẢ DÒNG để dễ thấy
+            if (isLowStock)
             {
-                if (col.DataPropertyName.Equals("StockQuantity", StringComparison.OrdinalIgnoreCase))
+                e.CellStyle.BackColor = Color.FromArgb(255, 241, 242); // Rose/Red 50 dịu mắt
+                e.CellStyle.SelectionBackColor = Color.FromArgb(254, 226, 226); // Nền khi chọn dòng cảnh báo
+                e.CellStyle.SelectionForeColor = Color.FromArgb(153, 27, 27);
+            }
+
+            // 2. Định dạng riêng biệt cho từng cột
+            if (col.DataPropertyName.Equals("StockQuantity", StringComparison.OrdinalIgnoreCase))
+            {
+                if (isOutOfStock)
                 {
-                    if (item.StockQuantity <= 10)
-                    {
-                        e.CellStyle!.BackColor = Color.FromArgb(254, 242, 242); // Red 50
-                        e.CellStyle!.ForeColor = Color.FromArgb(220, 38, 38);   // Red 600
-                        e.CellStyle!.Font = new Font(dgvProducts.Font, FontStyle.Bold);
-                    }
-                    else
-                    {
-                        e.CellStyle!.ForeColor = Color.FromArgb(22, 163, 74);   // Green 600
-                        e.CellStyle!.Font = new Font(dgvProducts.Font, FontStyle.Bold);
-                    }
+                    // Ô HẾT HÀNG: Nền đỏ cờ nổi bật, chữ trắng đậm
+                    e.CellStyle.BackColor = Color.FromArgb(239, 68, 68); // Red 500
+                    e.CellStyle.ForeColor = Color.White;
+                    e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                    e.CellStyle.SelectionBackColor = Color.FromArgb(185, 28, 28);
+                    e.CellStyle.SelectionForeColor = Color.White;
+                    e.Value = "0 (Hết)";
+                    e.FormattingApplied = true;
                 }
-                else if (col.DataPropertyName.Equals("Price", StringComparison.OrdinalIgnoreCase))
+                else if (isLowStock)
                 {
-                    e.CellStyle!.ForeColor = Color.FromArgb(37, 99, 235);       // Tech Blue
-                    e.CellStyle!.Font = new Font(dgvProducts.Font, FontStyle.Bold);
+                    // Ô TỒN KHO THẤP (<= 10): Nền đỏ đậm hơn 1 tông rõ nét (#FECACA), chữ đỏ thẫm đậm
+                    e.CellStyle.BackColor = Color.FromArgb(254, 202, 202); // Red 200 (đậm hơn tông cũ rất nhiều)
+                    e.CellStyle.ForeColor = Color.FromArgb(153, 27, 27);   // Red 800
+                    e.CellStyle.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+                    e.CellStyle.SelectionBackColor = Color.FromArgb(220, 38, 38); // Đỏ cờ khi click vào ô
+                    e.CellStyle.SelectionForeColor = Color.White;
+                }
+                else
+                {
+                    // TỒN KHO AN TOÀN (> 10): Chữ xanh lá cây thành công, đậm nét
+                    e.CellStyle.ForeColor = Color.FromArgb(22, 163, 74); // Green 600
+                    e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                }
+            }
+            else if (col.DataPropertyName.Equals("Price", StringComparison.OrdinalIgnoreCase))
+            {
+                e.CellStyle.ForeColor = Color.FromArgb(37, 99, 235); // Tech Blue
+                e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+            }
+            else if (col.DataPropertyName.Equals("ProductName", StringComparison.OrdinalIgnoreCase))
+            {
+                if (isLowStock)
+                {
+                    // Dòng cảnh báo tồn kho: Tên sản phẩm in đậm hơn cho dễ nhận diện
+                    e.CellStyle.Font = new Font("Segoe UI", 9.5F, FontStyle.Bold);
+                    e.CellStyle.ForeColor = Color.FromArgb(17, 24, 39);
                 }
             }
         }
