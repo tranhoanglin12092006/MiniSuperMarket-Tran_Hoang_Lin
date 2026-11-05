@@ -12,6 +12,7 @@ namespace MiniSupermarket.WinForms
         private System.Windows.Forms.Panel panelLogoDivider;
         private System.Windows.Forms.Panel panelMenu;
         private System.Windows.Forms.Button btnPOS;
+        private System.Windows.Forms.Button btnOrders;
         private System.Windows.Forms.Button btnProduct;
         private System.Windows.Forms.Button btnCategory;
         private System.Windows.Forms.Button btnCustomer;
@@ -54,6 +55,7 @@ namespace MiniSupermarket.WinForms
             this.btnCustomer = new System.Windows.Forms.Button();
             this.btnCategory = new System.Windows.Forms.Button();
             this.btnProduct = new System.Windows.Forms.Button();
+            this.btnOrders = new System.Windows.Forms.Button();
             this.btnPOS = new System.Windows.Forms.Button();
             this.panelSidebarBottom = new System.Windows.Forms.Panel();
             this.btnLogout = new System.Windows.Forms.Button();
@@ -103,6 +105,7 @@ namespace MiniSupermarket.WinForms
             this.panelMenu.Controls.Add(this.btnCustomer);
             this.panelMenu.Controls.Add(this.btnCategory);
             this.panelMenu.Controls.Add(this.btnProduct);
+            this.panelMenu.Controls.Add(this.btnOrders);
             this.panelMenu.Controls.Add(this.btnPOS);
             this.panelMenu.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panelMenu.Location = new System.Drawing.Point(0, 85);
@@ -205,6 +208,25 @@ namespace MiniSupermarket.WinForms
             this.btnProduct.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             this.btnProduct.UseVisualStyleBackColor = true;
             this.btnProduct.Click += new System.EventHandler(this.btnProduct_Click);
+            // 
+            // btnOrders
+            // 
+            this.btnOrders.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.btnOrders.Dock = System.Windows.Forms.DockStyle.Top;
+            this.btnOrders.FlatAppearance.BorderSize = 0;
+            this.btnOrders.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnOrders.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.btnOrders.ForeColor = System.Drawing.Color.FromArgb(167, 196, 181);
+            this.btnOrders.Location = new System.Drawing.Point(12, 60);
+            this.btnOrders.Margin = new System.Windows.Forms.Padding(0, 0, 0, 6);
+            this.btnOrders.Name = "btnOrders";
+            this.btnOrders.Padding = new System.Windows.Forms.Padding(16, 0, 0, 0);
+            this.btnOrders.Size = new System.Drawing.Size(236, 48);
+            this.btnOrders.TabIndex = 1;
+            this.btnOrders.Text = "🧾  Quản lý Đơn hàng";
+            this.btnOrders.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnOrders.UseVisualStyleBackColor = true;
+            this.btnOrders.Click += new System.EventHandler(this.btnOrders_Click);
             // 
             // btnPOS
             // 

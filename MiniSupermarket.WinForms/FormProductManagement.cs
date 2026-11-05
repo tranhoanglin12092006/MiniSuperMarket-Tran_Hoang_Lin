@@ -84,6 +84,43 @@ namespace MiniSupermarket.WinForms
             await LoadProductsPagedAsync();   // Nạp bảng sản phẩm phân trang
             RepositionExportButton();
             await LoadInventoryKPIsAsync();   // Nạp 4 thẻ chỉ số kho hàng
+
+            ApplyRolePermissions();
+        }
+
+        private void ApplyRolePermissions()
+        {
+            bool isCashier = string.Equals(SessionManager.CurrentRole, "CASHIER", StringComparison.OrdinalIgnoreCase);
+            if (isCashier)
+            {
+                // Vô hiệu hóa các nút Thao tác dữ liệu (Thêm, Sửa, Xóa) cho vai trò Thu ngân
+                btnAdd.Enabled = false;
+                btnAdd.BackColor = Color.FromArgb(226, 232, 240); // Slate 200
+                btnAdd.ForeColor = Color.FromArgb(148, 163, 184); // Slate 400
+                btnAdd.Cursor = Cursors.No;
+
+                btnUpdate.Enabled = false;
+                btnUpdate.BackColor = Color.FromArgb(226, 232, 240);
+                btnUpdate.ForeColor = Color.FromArgb(148, 163, 184);
+                btnUpdate.Cursor = Cursors.No;
+
+                btnDelete.Enabled = false;
+                btnDelete.BackColor = Color.FromArgb(226, 232, 240);
+                btnDelete.ForeColor = Color.FromArgb(148, 163, 184);
+                btnDelete.Cursor = Cursors.No;
+
+                // Chuyển toàn bộ các ô nhập liệu sang chế độ chỉ đọc
+                txtBarcode.ReadOnly = true;
+                txtProductName.ReadOnly = true;
+                nudPrice.Enabled = false;
+                nudStock.Enabled = false;
+                cboCategory.Enabled = false;
+
+                // Cập nhật tiêu đề thẻ và thông báo chỉ xem
+                lblCardHeader.Text = "📦 THÔNG TIN SẢN PHẨM (CHẾ ĐỘ XEM)";
+                lblNotification.Text = "🔒 Tài khoản Thu ngân (Cashier) đang ở chế độ xem thông tin sản phẩm.";
+                lblNotification.ForeColor = Color.FromArgb(217, 119, 6); // Amber 600
+            }
         }
 
         // =========================================================================
@@ -370,6 +407,12 @@ namespace MiniSupermarket.WinForms
         // =========================================================================
         private async void btnAdd_Click(object sender, EventArgs e)
         {
+            if (string.Equals(SessionManager.CurrentRole, "CASHIER", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Tài khoản Thu ngân (Cashier) chỉ có quyền XEM thông tin sản phẩm, không được phép thêm mới!", "Chỉ xem", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             string barcode = txtBarcode.Text.Trim();
             string prodName = txtProductName.Text.Trim();
 
@@ -434,6 +477,12 @@ namespace MiniSupermarket.WinForms
         // =========================================================================
         private async void btnUpdate_Click(object sender, EventArgs e)
         {
+            if (string.Equals(SessionManager.CurrentRole, "CASHIER", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Tài khoản Thu ngân (Cashier) chỉ có quyền XEM thông tin sản phẩm, không được phép cập nhật!", "Chỉ xem", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             if (string.IsNullOrEmpty(txtId.Text))
             {
                 MessageBox.Show("Vui lòng chọn sản phẩm cần cập nhật từ bảng!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -493,6 +542,12 @@ namespace MiniSupermarket.WinForms
         // =========================================================================
         private async void btnDelete_Click(object sender, EventArgs e)
         {
+            if (string.Equals(SessionManager.CurrentRole, "CASHIER", StringComparison.OrdinalIgnoreCase))
+            {
+                MessageBox.Show("Tài khoản Thu ngân (Cashier) chỉ có quyền XEM thông tin sản phẩm, không được phép xóa!", "Chỉ xem", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
             if (string.IsNullOrEmpty(txtId.Text))
             {
                 MessageBox.Show("Vui lòng chọn sản phẩm cần xóa từ bảng!", "Cảnh báo", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -542,8 +597,17 @@ namespace MiniSupermarket.WinForms
             nudPrice.Value = nudPrice.Minimum;
             nudStock.Value = nudStock.Minimum;
             if (cboCategory.Items.Count > 0) cboCategory.SelectedIndex = 0;
-            lblNotification.Text = "● Hệ thống sẵn sàng.";
-            lblNotification.ForeColor = Color.FromArgb(71, 85, 105);
+
+            if (string.Equals(SessionManager.CurrentRole, "CASHIER", StringComparison.OrdinalIgnoreCase))
+            {
+                lblNotification.Text = "🔒 Tài khoản Thu ngân (Cashier) đang ở chế độ xem thông tin sản phẩm.";
+                lblNotification.ForeColor = Color.FromArgb(217, 119, 6);
+            }
+            else
+            {
+                lblNotification.Text = "● Hệ thống sẵn sàng.";
+                lblNotification.ForeColor = Color.FromArgb(71, 85, 105);
+            }
         }
 
         // =========================================================================

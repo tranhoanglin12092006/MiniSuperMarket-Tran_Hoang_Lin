@@ -35,7 +35,7 @@ namespace MiniSupermarket.WinForms
 
         private void SetupButtonHoverEffects()
         {
-            Button[] menuButtons = { btnPOS, btnProduct, btnCategory, btnCustomer, btnReports, btnUserManage };
+            Button[] menuButtons = { btnPOS, btnOrders, btnProduct, btnCategory, btnCustomer, btnReports, btnUserManage };
             foreach (var btn in menuButtons)
             {
                 btn.MouseEnter += (s, e) =>
@@ -70,6 +70,7 @@ namespace MiniSupermarket.WinForms
                 lblSystemStatus.Visible = false;
 
                 btnPOS.Text = "🛒";
+                btnOrders.Text = "🧾";
                 btnProduct.Text = "📦";
                 btnCategory.Text = "📁";
                 btnCustomer.Text = "👥";
@@ -78,6 +79,7 @@ namespace MiniSupermarket.WinForms
                 btnLogout.Text = "🚪";
 
                 btnPOS.Padding = new Padding(0);
+                btnOrders.Padding = new Padding(0);
                 btnProduct.Padding = new Padding(0);
                 btnCategory.Padding = new Padding(0);
                 btnCustomer.Padding = new Padding(0);
@@ -85,6 +87,7 @@ namespace MiniSupermarket.WinForms
                 btnUserManage.Padding = new Padding(0);
 
                 btnPOS.TextAlign = ContentAlignment.MiddleCenter;
+                btnOrders.TextAlign = ContentAlignment.MiddleCenter;
                 btnProduct.TextAlign = ContentAlignment.MiddleCenter;
                 btnCategory.TextAlign = ContentAlignment.MiddleCenter;
                 btnCustomer.TextAlign = ContentAlignment.MiddleCenter;
@@ -99,6 +102,7 @@ namespace MiniSupermarket.WinForms
                 lblSystemStatus.Visible = true;
 
                 btnPOS.Text = "🛒  Bán hàng (POS)";
+                btnOrders.Text = "🧾  Quản lý Đơn hàng";
                 btnProduct.Text = "📦  Quản lý Sản phẩm";
                 btnCategory.Text = "📁  Quản lý Danh mục";
                 btnCustomer.Text = "👥  Khách hàng Thân thiết";
@@ -108,6 +112,7 @@ namespace MiniSupermarket.WinForms
 
                 var pad = new Padding(16, 0, 0, 0);
                 btnPOS.Padding = pad;
+                btnOrders.Padding = pad;
                 btnProduct.Padding = pad;
                 btnCategory.Padding = pad;
                 btnCustomer.Padding = pad;
@@ -115,6 +120,7 @@ namespace MiniSupermarket.WinForms
                 btnUserManage.Padding = pad;
 
                 btnPOS.TextAlign = ContentAlignment.MiddleLeft;
+                btnOrders.TextAlign = ContentAlignment.MiddleLeft;
                 btnProduct.TextAlign = ContentAlignment.MiddleLeft;
                 btnCategory.TextAlign = ContentAlignment.MiddleLeft;
                 btnCustomer.TextAlign = ContentAlignment.MiddleLeft;
@@ -203,7 +209,7 @@ namespace MiniSupermarket.WinForms
         /// </summary>
         private void HighlightActiveButton(Button activeButton)
         {
-            Button[] menuButtons = { btnPOS, btnProduct, btnCategory, btnCustomer, btnReports, btnUserManage };
+            Button[] menuButtons = { btnPOS, btnOrders, btnProduct, btnCategory, btnCustomer, btnReports, btnUserManage };
             foreach (var btn in menuButtons)
             {
                 btn.BackColor = Color.Transparent;
@@ -228,6 +234,7 @@ namespace MiniSupermarket.WinForms
             {
                 case "ADMIN":
                     btnPOS.Visible = true;
+                    btnOrders.Visible = true;
                     btnProduct.Visible = true;
                     btnCategory.Visible = true;
                     btnCustomer.Visible = true;
@@ -237,8 +244,9 @@ namespace MiniSupermarket.WinForms
 
                 case "CASHIER":
                     btnPOS.Visible = true;
-                    btnProduct.Visible = false;
-                    btnCustomer.Visible = false;
+                    btnOrders.Visible = true;
+                    btnProduct.Visible = true;
+                    btnCustomer.Visible = true;
                     btnCategory.Visible = false;
                     btnReports.Visible = false;
                     btnUserManage.Visible = false;
@@ -246,6 +254,7 @@ namespace MiniSupermarket.WinForms
 
                 case "WAREHOUSE":
                     btnPOS.Visible = false;
+                    btnOrders.Visible = false;
                     btnCustomer.Visible = false;
                     btnReports.Visible = false;
                     btnUserManage.Visible = false;
@@ -288,6 +297,11 @@ namespace MiniSupermarket.WinForms
             OpenChildForm(new FormPOS(), "HỆ THỐNG BÁN HÀNG POS (BARCODE)", "Bán hàng", btnPOS);
         }
 
+        private void btnOrders_Click(object sender, EventArgs e)
+        {
+            OpenChildForm(new FormOrderManagement(), "QUẢN LÝ ĐƠN HÀNG & LỊCH SỬ THANH TOÁN", "Đơn hàng", btnOrders);
+        }
+
         private void btnProduct_Click(object sender, EventArgs e)
         {
             string role = SessionManager.CurrentRole?.ToUpper() ?? string.Empty;
@@ -296,7 +310,8 @@ namespace MiniSupermarket.WinForms
                 MessageBox.Show("Bạn không có quyền truy cập quản lý sản phẩm!", "Từ chối", MessageBoxButtons.OK, MessageBoxIcon.Stop);
                 return;
             }
-            OpenChildForm(new FormProductManagement(), "QUẢN LÝ SẢN PHẨM & TỒN KHO", "Sản phẩm", btnProduct);
+            string screenTitle = role == "CASHIER" ? "QUẢN LÝ SẢN PHẨM & TỒN KHO (CHẾ ĐỘ XEM)" : "QUẢN LÝ SẢN PHẨM & TỒN KHO";
+            OpenChildForm(new FormProductManagement(), screenTitle, "Sản phẩm", btnProduct);
         }
 
         private void btnCategory_Click(object sender, EventArgs e)
